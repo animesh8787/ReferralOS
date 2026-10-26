@@ -297,3 +297,22 @@ def test_non_latin_text_does_not_crash_rendering():
     r, _, _ = build(items)
     pdf = render.to_pdf(r["content"])
     assert fitz.open(stream=pdf, filetype="pdf").page_count == 1
+
+
+def test_unconfirmed_suggestions_that_mention_a_used_skill_never_become_the_support_for_a_claim():
+    """Regression (found by the browser test): a GitHub suggestion mentioning Python must not be cited by the summary."""
+    sug = [it("g1", "project", {"name": "Gh Repo", "stack": ["Python", "PostgreSQL"], "description": ["x"]}, status="suggested", source="github"),
+           it("g2", "skill", {"name": "Python"}, status="suggested", source="github", evidence="USED_IN_PROJECT")]
+    r, _, _ = build(base_items(extra=sug))
+    summary_claims = [c for c in r["ledger"] if c["kind"] == "summary"]
+    assert summary_claims and all(not ({"g1", "g2"} & set(c["fact_ids"])) for c in r["ledger"])
+    rep = validate.validate_all(r["ledger"], base_items(extra=sug), {cid for cid, _ in engine.render_nodes(r["content"])})
+    assert rep["ok_to_approve"] and rep["excluded_claims_in_resume"] == []
+    facts = drafts_facts(base_items(extra=sug))
+    assert "Python" in facts["skills"] and not ({"g1", "g2"} & set(facts["skill_ids"]))
+
+
+def drafts_facts(items):
+    from app.services.outreach import drafts
+    a = jd_analysis.analyse(JD_A + "\n" + "x" * 120)
+    return drafts.sender_facts(items, matching.build_matrix(a, matching.summarize_profile(items, TODAY)), "Alex Example")

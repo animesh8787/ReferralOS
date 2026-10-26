@@ -36,4 +36,19 @@ export async function upload<T = unknown>(path: string, file: File): Promise<T> 
   return res.json();
 }
 
+type TaskLike = { task_id?: string; status?: string; task_status?: string; result?: unknown; error?: string | null };
+
+/** Background work never blocks the UI: if the API answered "queued/running", poll the task until it finishes (up to ~2 minutes). */
+export async function settle<T extends TaskLike>(r: T, onTick?: (progress: number) => void): Promise<T> {
+  const st = r.task_status ?? r.status;
+  if (!r.task_id || !["queued", "running"].includes(st ?? "")) return r;
+  for (let i = 0; i < 120; i++) {
+    await new Promise((res) => setTimeout(res, i < 5 ? 500 : 1000));
+    const t = await api<{ status: string; progress: number; result: unknown; error: string | null }>(`/tasks/${r.task_id}`);
+    onTick?.(t.progress);
+    if (t.status === "done" || t.status === "failed") return { ...r, task_status: t.status, result: t.result, error: t.error };
+  }
+  return r;
+}
+
 export type Me = { id: string; email: string; display_name: string; role: string; email_verified: boolean };

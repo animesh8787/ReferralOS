@@ -2,7 +2,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Pager from "@/components/Pager";
-import { api } from "@/lib/api";
+import { api, settle } from "@/lib/api";
 
 type Comp = { points: number; weight: number; known: boolean; value?: number | null; explanation?: string };
 type P = { contact_id: string; rank: number; tier: number | null; score: number; confidence: number; excluded: boolean; name: string; company: string | null;
@@ -31,7 +31,7 @@ export default function Prospects() {
     setMsg("");
     try {
       await api("/scoring/config", { method: "PUT", body });
-      await api("/scoring/recompute", { body: {} });
+      await settle(await api<{ task_id: string; status: string }>("/scoring/recompute", { body: {} }));
       setW(null); cfg.mutate(); list.mutate();
       setMsg("Settings saved and prospects recalculated.");
     } catch (e) { setMsg((e as Error).message); }
@@ -47,7 +47,7 @@ export default function Prospects() {
         <div className="flex gap-2 text-sm">
           <a className="rounded border px-2 py-1 underline" href="/api/exports/prospects.csv">CSV</a>
           <a className="rounded border px-2 py-1 underline" href="/api/exports/prospects.xlsx">Excel</a>
-          <button className="rounded border px-2 py-1" onClick={async () => { await api("/scoring/recompute", { body: {} }); list.mutate(); }}>Recalculate</button>
+          <button className="rounded border px-2 py-1" onClick={async () => { await settle(await api<{ task_id: string; status: string }>("/scoring/recompute", { body: {} })); list.mutate(); }}>Recalculate</button>
         </div>
       </header>
 

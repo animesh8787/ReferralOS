@@ -148,7 +148,13 @@ def run_task(task_id: str | None = None) -> bool:
 
 
 def worker_loop(poll_s: float = 1.0, stop=lambda: False) -> None:
+    from .services import retention
     requeue_stale()
+    last_housekeeping = 0.0
     while not stop():
         if not run_task():
             time.sleep(poll_s)
+        if time.monotonic() - last_housekeeping > 3600:  # hourly: stale tasks and per-user data-retention purges
+            last_housekeeping = time.monotonic()
+            requeue_stale()
+            retention.run_all()

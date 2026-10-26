@@ -4,7 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import Pager from "@/components/Pager";
 import StatusBadge from "@/components/StatusBadge";
-import { api } from "@/lib/api";
+import { api, settle } from "@/lib/api";
 
 type Job = { id: string; title: string; company: string | null; location: string | null; work_arrangement: string; employment_type: string; status: string;
   needs_reverify: boolean; contacts_at_company: number; outreach_eligible: boolean; origin: string };
@@ -42,8 +42,8 @@ export default function JobsPage() {
         <div><h1 className="text-xl font-semibold">Jobs</h1>
           <p className="text-sm text-gray-600">Only roles listed as open by the company&apos;s own job board count as verified. Everything else is shown with the reason it is uncertain.</p></div>
         <div className="flex gap-2 text-sm">
-          <button disabled={busy} className="rounded bg-black px-3 py-1.5 text-white disabled:opacity-50" onClick={() => run("Discovery finished.", () => api("/jobs/discover", { body: {} }))}>Find jobs on my boards</button>
-          <button disabled={busy} className="rounded border px-3 py-1.5 disabled:opacity-50" onClick={() => run("Stale jobs re-checked.", () => api("/jobs/verify-stale", { body: {} }))}>Re-check stale jobs</button>
+          <button disabled={busy} className="rounded bg-black px-3 py-1.5 text-white disabled:opacity-50" onClick={() => run("Discovery finished.", async () => settle(await api<{ task_id: string; status: string }>("/jobs/discover", { body: {} })))}>Find jobs on my boards</button>
+          <button disabled={busy} className="rounded border px-3 py-1.5 disabled:opacity-50" onClick={() => run("Stale jobs re-checked.", async () => settle(await api<{ task_id: string; status: string }>("/jobs/verify-stale", { body: {} })))}>Re-check stale jobs</button>
         </div>
       </header>
       {msg && <p role="status" className="text-sm">{msg}</p>}

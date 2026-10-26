@@ -11,7 +11,7 @@ import random
 import time
 from datetime import datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from ... import crypto, storage
@@ -181,7 +181,18 @@ def _attachment(db: Session, m: OutreachMessage):
     return ("resume.pdf", storage.bundle_path(m.user_id, m.attach_resume_id, "resume.pdf").read_bytes())
 
 
-def send_outbox(db: Session, cfg: dict, sleep=time.sleep, rng=random.uniform, now: datetime | None = None, limit: int = 100) -> dict:
+def claim(db: Session, m: OutreachMessage) -> bool:
+    """Atomically move queued -> sending. Only ONE runner can win, even if two sender tasks loaded the same message."""
+    r = db.execute(update(OutreachMessage).where(OutreachMessage.id == m.id, OutreachMessage.send_state == "queued", OutreachMessage.approval_state == "approved")
+                   .values(send_state="sending"))
+    db.commit()  # make the claim visible to every other runner before anything is sent
+    if r.rowcount != 1:
+        return False
+    db.refresh(m)
+    return True
+
+
+def send_outbox(db: Session, cfg: dict, sleep=time.sleep, rng=random.uniform, now: datetime | None = None, limit: int = 100, commit_each: bool = False) -> dict:
     """Send queued, approved emails that pass the gate, with human-like pacing between sends. Never retries an ambiguous send."""
     out = {"sent": 0, "dry_run": 0, "held": [], "blocked": [], "unconfirmed": 0, "failed": 0}
     msgs = db.query(OutreachMessage).filter(OutreachMessage.send_state == "queued", OutreachMessage.approval_state == "approved", OutreachMessage.channel == "email") \
@@ -203,14 +214,16 @@ def send_outbox(db: Session, cfg: dict, sleep=time.sleep, rng=random.uniform, no
                 if any(b["code"] in ("GLOBAL_PAUSE", "NO_PROVIDER", "MANUAL_MODE") for b in res["blocks"]):
                     break  # nothing else can go out either
             continue
+        if not claim(db, m):
+            continue  # someone else (another run) already took this message
         provider, _ = provider_for(db, m.user_id, cfg)
         if not first:
             lo, hi = cfg["pacing_seconds"]
             sleep(rng(lo, hi))  # pacing keeps us well inside provider limits; it is not an evasion technique
         first = False
         mime, rfc = providers.build_mime(cfg["sender_name"], cfg["sender_email"], m.to_email, m.subject, m.body, _attachment(db, m))
-        m.rfc_message_id, m.send_state = rfc, "sending"
-        db.flush()
+        m.rfc_message_id = rfc
+        db.commit()  # persist "sending" + our Message-ID BEFORE the network call: a crash mid-send is then visible, never silently re-sent
         r = provider.send(m.user_id, mime, rfc, m.to_email)
         pair = db.get(OutreachPair, m.pair_id)
         if r.ok and provider.name == "dry_run":
@@ -237,6 +250,8 @@ def send_outbox(db: Session, cfg: dict, sleep=time.sleep, rng=random.uniform, no
             if pair and pair.status == "QUEUED":
                 pair.status = "APPROVED"
             out["failed"] += 1
+        if commit_each:
+            db.commit()
     return out
 
 

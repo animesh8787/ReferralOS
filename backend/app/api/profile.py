@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api", tags=["profile"])
 
 
 def _task(t):
-    return {"task_id": t.id, "status": t.status, "result": t.result}
+    return {"task_id": t.id, "status": t.status, "task_status": t.status, "result": t.result}
 
 
 # ---------------------------------------------------------------- consents

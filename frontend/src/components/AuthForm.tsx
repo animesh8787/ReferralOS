@@ -49,6 +49,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         <button disabled={busy} className="rounded bg-black px-3 py-2 text-white disabled:opacity-50">{busy ? "Working…" : mode === "login" ? "Sign in" : "Sign up"}</button>
       </form>
       <p className="text-sm">
+        {mode === "login" && <><Link className="underline" href="/forgot">Forgot your password?</Link> · </>}<Link className="underline" href="/verify">Verify your email</Link><br />
         {mode === "login" ? <>New here? <Link className="underline" href="/signup">Create an account</Link></> : <>Have an account? <Link className="underline" href="/login">Sign in</Link></>}
       </p>
     </main>

@@ -60,7 +60,11 @@ def sender_facts(items: list[dict], matrix: list[dict], sender_name: str | None,
         intro_ids = [edu["id"]]
     elif exp:
         intro, intro_ids = f"a {exp['data'].get('title')}", [exp["id"]]
-    strong = [r for r in matrix if r["type"] == "skill" and r["status"] == "STRONG_EVIDENCE" and r["fact_ids"] and all(f in act for f in r["fact_ids"])]
+    strong = []
+    for r in matrix:  # keep only the ACTIVE facts behind each strong skill (a skill also seen in a GitHub suggestion is still strong)
+        ids = [f for f in r["fact_ids"] if f in act]
+        if r["type"] == "skill" and r["status"] == "STRONG_EVIDENCE" and ids:
+            strong.append({**r, "fact_ids": ids})
     strong.sort(key=lambda r: r["importance"] != "mandatory")
     skills = [r["term"] for r in strong[:3]]
     ev_ids = [f for r in strong[:3] for f in r["fact_ids"] if f in act]

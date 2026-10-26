@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
+import ConsentCheckbox from "@/components/ConsentCheckbox";
 import ItemCard from "@/components/ItemCard";
 import { Item } from "@/components/ProvenanceBadge";
-import { api, upload } from "@/lib/api";
+import { api, settle, upload } from "@/lib/api";
 
 type Profile = {
   items: Record<string, Item[]>;
@@ -30,7 +31,7 @@ export default function ProfilePage() {
     setBusy(true);
     setMsg("");
     try {
-      const r = await fn();
+      const r = await settle(await fn());
       if (r.resume_id) setLastResume(r.resume_id);
       setMsg(r.result?.error ?? r.result?.warning ?? `${okText}${r.result?.added !== undefined ? ` (${r.result.added} items added)` : ""}`);
       await mutate();
@@ -63,10 +64,7 @@ export default function ProfilePage() {
         </label>
         {(["github", "portfolio"] as const).map((k) => (
           <div key={k} className="grid gap-2 text-sm">
-            <label className="flex items-start gap-2">
-              <input type="checkbox" checked={!!consents.data?.[k]?.granted} onChange={async (e) => { await api(`/consents/${k}`, { method: "PUT", body: { granted: e.target.checked } }); consents.mutate(); }} />
-              <span>{consents.data?.[k]?.description ?? k}. Only public data is read; you choose what to keep.</span>
-            </label>
+            <ConsentCheckbox name={k} extra="Only public data is read; you choose what to keep." />
             {consents.data?.[k]?.granted && (
               <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); act(() => api<Task>(`/profile/${k}`, { body: k === "github" ? { username: gh } : { url } }), k === "github" ? "GitHub checked" : "Page read"); }}>
                 <input className="flex-1 rounded border px-2 py-1" required aria-label={k === "github" ? "GitHub username or URL" : "Portfolio URL"} placeholder={k === "github" ? "GitHub username or profile URL" : "https://your-portfolio.example"} value={k === "github" ? gh : url} onChange={(e) => (k === "github" ? setGh(e.target.value) : setUrl(e.target.value))} />

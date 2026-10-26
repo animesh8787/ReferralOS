@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
-import { api } from "@/lib/api";
+import { api, settle } from "@/lib/api";
 
 type Flag = { code: string; severity?: string; detail: string };
 type Msg = { id: string; channel: string; kind: string; to_name: string | null; to_email: string | null; to_linkedin_url: string | null; company: string | null; job_title: string | null;
@@ -28,7 +28,7 @@ export default function Outreach() {
 
   async function run(fn: () => Promise<unknown>, ok: string) {
     setMsg("");
-    try { await fn(); setMsg(ok); refresh(); setSel([]); setConfirm(null); } catch (e) { setMsg((e as Error).message); }
+    try { const r = await fn(); setMsg(typeof r === "string" ? r : ok); refresh(); setSel([]); setConfirm(null); } catch (e) { setMsg((e as Error).message); }
   }
   async function approveSelected() {
     const ids = sel.length ? sel : (review.data?.items ?? []).filter((m) => m.can_approve).map((m) => m.id);
@@ -57,7 +57,7 @@ export default function Outreach() {
       {tab === "Review" && (
         <section aria-labelledby="rv">
           <div className="mb-2 flex flex-wrap items-center gap-2"><h2 id="rv" className="font-medium">I prepared {review.data?.total ?? 0} messages for you to review</h2>
-            <button className="rounded bg-black px-3 py-1 text-sm text-white" onClick={() => run(async () => { const r = await api<{ messages: string[]; skipped: { why: string }[] }>("/outreach/generate", { body: {} }); setMsg(`${r.messages.length} drafted, ${r.skipped.length} skipped.`); }, "Batch prepared.")}>Prepare a new batch</button>
+            <button className="rounded bg-black px-3 py-1 text-sm text-white" onClick={() => run(async () => { const r = await api<{ messages: string[]; skipped: { why: string }[] }>("/outreach/generate", { body: {} }); return `${r.messages.length} drafted, ${r.skipped.length} skipped.`; }, "Batch prepared.")}>Prepare a new batch</button>
             <button disabled={approvable === 0} className="rounded border px-3 py-1 text-sm disabled:opacity-40" onClick={approveSelected}>Approve {sel.length ? "selected" : "all ready"} ({approvable})</button></div>
           {confirm && (
             <form className="mb-2 grid gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm" onSubmit={(e) => { e.preventDefault(); approveSelected(); }}>
@@ -97,15 +97,20 @@ export default function Outreach() {
       {tab === "Sending" && (
         <section aria-labelledby="sd" className="grid gap-2 text-sm"><h2 id="sd" className="font-medium">Sending</h2>
           <p>Delivery mode: <strong>{cfg.data?.delivery_mode.replaceAll("_", " ").toLowerCase()}</strong> · Gmail {cfg.data?.gmail.connected ? "connected" : "not connected"} · daily limit {cfg.data?.daily_limit}{cfg.data?.global_pause && <strong className="text-red-700"> · PAUSED</strong>}</p>
-          <button className="w-fit rounded bg-black px-3 py-1.5 text-white" onClick={() => run(async () => { const r = await api<{ sent: number; dry_run: number; held: { codes: string[] }[]; blocked: { codes: string[] }[]; unconfirmed: number }>("/outreach/send", { body: {} });
-            setMsg(`Sent ${r.sent}${r.dry_run ? `, dry-run ${r.dry_run}` : ""}; held ${r.held.length}${r.held[0] ? ` (${r.held[0].codes.join(", ")})` : ""}; blocked ${r.blocked.length}${r.blocked[0] ? ` (${r.blocked[0].codes.join(", ")})` : ""}; unconfirmed ${r.unconfirmed}.`); }, "Sender ran.")}>Send approved emails now</button>
+          <button className="w-fit rounded bg-black px-3 py-1.5 text-white" onClick={() => run(async () => {
+            const start = await api<{ task_id: string; task_status: string }>("/outreach/send", { body: {} });
+            const done = await settle(start as { task_id: string; task_status: string; result?: unknown });
+            const r = (done.result ?? start) as { sent?: number; dry_run?: number; held?: { codes: string[] }[]; blocked?: { codes: string[] }[]; unconfirmed?: number; error?: string };
+            if (r.sent === undefined) return "The sender is still working. Check back in a moment.";
+            return `Sent ${r.sent}${r.dry_run ? `, dry-run ${r.dry_run}` : ""}; held ${r.held?.length ?? 0}${r.held?.[0] ? ` (${r.held[0].codes.join(", ")})` : ""}; blocked ${r.blocked?.length ?? 0}${r.blocked?.[0] ? ` (${r.blocked[0].codes.join(", ")})` : ""}; unconfirmed ${r.unconfirmed ?? 0}.`;
+          }, "Sender ran.")}>Send approved emails now</button>
           <ul className="grid gap-1">{sending.data?.items.map((m) => <li key={m.id} className="rounded border p-2">{m.to_email ?? m.to_name} · {m.send_state}{m.last_block?.[0] && <span className="text-amber-800"> · {m.last_block[0].code}: {m.last_block[0].detail}</span>}
             {m.send_state === "delivery_unconfirmed" && <strong className="text-red-700"> · delivery unconfirmed: it will never be re-sent automatically. <Link className="underline" href={`/outreach/${m.id}`}>Reconcile</Link></strong>}</li>)}</ul></section>)}
 
       {tab === "Activity" && (
         <section aria-labelledby="ac"><h2 id="ac" className="mb-2 font-medium">Your activity log</h2>
           <ul className="grid gap-1 text-xs">{audit.data?.items.map((a, i) => <li key={i} className="rounded border px-2 py-1">{new Date(a.at + "Z").toLocaleString()} · {a.action.replaceAll("_", " ")} {Object.keys(a.detail).length > 0 && <span className="text-gray-500">{JSON.stringify(a.detail)}</span>}</li>)}</ul></section>)}
-      <p className="text-xs text-gray-600">Follow-ups are only ever drafted for your approval; <button className="underline" onClick={() => run(async () => { const r = await api<{ drafts_created: string[] }>("/outreach/followups/scan", { body: {} }); setMsg(`${r.drafts_created.length} follow-up draft(s) waiting in Review.`); }, "Follow-ups checked.")}>check for due follow-ups</button>.</p>
+      <p className="text-xs text-gray-600">Follow-ups are only ever drafted for your approval; <button className="underline" onClick={() => run(async () => { const r = await api<{ drafts_created: string[] }>("/outreach/followups/scan", { body: {} }); return `${r.drafts_created.length} follow-up draft(s) waiting in Review.`; }, "Follow-ups checked.")}>check for due follow-ups</button>.</p>
     </div>
   );
 }

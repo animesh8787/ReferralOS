@@ -11,10 +11,11 @@
 | 7 Matching | done |
 | 8 Tailoring | done |
 | 9 Outreach | done |
-| 10 Frontend integration | next |
-| 11-12 | pending |
+| 10 Frontend integration | done |
+| 11 Synthetic validation | next |
+| 12 Docs & handoff | pending |
 
-Tests: backend 366 passing (`cd backend && uv run pytest -p no:warnings`).
+Tests: backend 383 passing; browser (Playwright) 3 passing (`cd backend && uv run pytest -p no:warnings`).
 Phase 3 covers: PDF/DOCX parsing (single/two-column/table/image-only/corrupt), span-traceable extraction, skill evidence levels,
 conflict/duplicate/date-order flags, profile versions, completeness + questions, GitHub + portfolio import against fakes
 (404, rate limit, fork, tutorial flag, robots, SSRF), polite fetcher, consents, isolation walker over all id routes.
@@ -99,3 +100,19 @@ INTEGRATION STATUS: Gmail send/find/replies and the OAuth code exchange are veri
 base64 MIME, outcome classification, token refresh). They have never touched Google. The mock provider is what runs offline.
 Known gaps: language is English only (flagged for non-English regions); no spell checker; LinkedIn is manual by design (disabled stub
 documented in adapters/linkedin_stub.py); open/click tracking is not implemented (off by spec default); SMTP adapter not built.
+
+Phase 10 covers: Dashboard (stats + pipeline funnel + next steps), resumable Onboarding wizard, Settings (career targets, scoring/matching/
+opportunity weights, missing-data policy, job-source toggles, optional AI provider with consent + encrypted key + monthly budget cap +
+usage log, privacy/retention/export/delete, notification prefs), Diagnostics (parser confidence, unmapped columns, rejected-row reasons,
+jobs per source, integration health that states what was actually verified), Privacy summary, Guide, verify/forgot/reset pages,
+accessible grouped navigation with skip link; the UI polls background tasks (settle()) so it is correct with a real worker.
+Browser tests (Playwright against the real API with mock adapters, inline tasks, throwaway SQLite): full journey (sign up -> verify ->
+onboard -> import both CSVs -> discover -> match -> tailor+approve -> simulated Gmail -> batch approve with count+limit confirmation ->
+send -> manual queue -> track -> reply -> dashboard -> exports -> delete account), phone-width layout on 20 pages, axe audit of 18 pages
+(0 serious/critical).
+Bugs found by the browser test and fixed: (1) the resume SUMMARY cited unconfirmed GitHub suggestions as support (validator rightly
+blocked approval); (2) sending ran inside the HTTP request and pacing (30-120 s) made it time out -> now a background task with an
+atomic per-message claim and heartbeat during pacing; (3) consent checkboxes did not flip until the server answered (now optimistic);
+(4) three pages overwrote their detailed status message with a generic one.
+Known gaps: Chromium used by the browser tests is the already-installed build (a newer one was not downloaded); real-time updates are
+by polling; dark mode not designed; LLM client verified against mock HTTP only.

@@ -351,14 +351,18 @@ def exclude_company(body: ExcludeIn, user: User = Depends(current_user), db: Ses
 
 
 # ---------------------------------------------------------------- sending, manual marks, reconciliation
-@router.post("/outreach/send")
+@router.post("/outreach/send", status_code=202)
 def send_now(user: User = Depends(current_user), db: Session = Depends(scoped_db)):
-    """Runs the sender once. Sends only approved, queued emails that pass every check; paces them; never retries an ambiguous send."""
+    """Starts the sender as a BACKGROUND task (pacing can take minutes, so it never runs inside a request). It sends only approved,
+    queued emails that pass every check, paces them, and never retries an ambiguous send. Poll /api/tasks/{id} for the result."""
+    from ..models.core import BackgroundTask
     ratelimit.check(f"send:{user.id}", 30, 3600)
-    cfg = osettings.get(db)
-    res = send.send_outbox(db, cfg)
-    audit(db, user.id, "outreach_send_run", sent=res["sent"], dry_run=res["dry_run"], unconfirmed=res["unconfirmed"])
-    return res
+    running = db.query(BackgroundTask).filter(BackgroundTask.kind == "send_outbox", BackgroundTask.status.in_(("queued", "running"))).first()
+    t = running or tasks.enqueue(db, "send_outbox")
+    if not running:
+        audit(db, user.id, "outreach_send_started")
+    db.refresh(t)
+    return {"task_id": t.id, "task_status": t.status, "status": t.status, **(t.result or {})}
 
 
 @router.post("/outreach/messages/{message_id}/mark-sent")

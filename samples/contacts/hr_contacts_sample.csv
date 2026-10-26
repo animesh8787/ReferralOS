@@ -1,0 +1,28 @@
+Company,Contact Name,Job Title,Email,Phone,LinkedIn,Location,Notes
+Acme Test Co,Pat Recruiter,Technical Recruiter,pat@acme-test.example.com,+1 415 555 0134,,Remote,synthetic
+Acme Test Co,Lee Talent,Recruiter,lee@acme-test.example.com,,,,
+Acme Test Co,Dup Person,Recruiter,PAT@acme-test.example.com,,,,duplicate of Pat (case differs)
+Globex Example,Bad Mail,HR,not-an-email,,,,"invalid email, kept for review"
+Globex Example,,,info@globex-example.example.com,,,,role account
+Initech Sample,No Reply,,noreply@initech-sample.example.com,,,,no-reply address
+,,,,,,,
+Acme Test Co,Riley Vikoson,Technical Recruiter,riley.vikoson@hr0.example.com,+1 415 555 0000,linkedin.com/in/synthetic-00500,Remote,
+Northwind Labs,Casey Vikoson,Technical Recruiter,casey.vikoson@hr1.example.com,+1 415 555 0001,linkedin.com/in/synthetic-00501,Remote,
+Globex Example,Morgan Vikoson,Technical Recruiter,morgan.vikoson@hr2.example.com,+1 415 555 0002,linkedin.com/in/synthetic-00502,Remote,
+Initech Sample,Jamie Vikoson,Technical Recruiter,jamie.vikoson@hr3.example.com,+1 415 555 0003,linkedin.com/in/synthetic-00503,Remote,
+Umbrella Demo,Quinn Vikoson,Technical Recruiter,quinn.vikoson@hr4.example.com,+1 415 555 0004,linkedin.com/in/synthetic-00504,Remote,
+Hooli Fixture,Avery Vikoson,Technical Recruiter,avery.vikoson@hr5.example.com,+1 415 555 0005,linkedin.com/in/synthetic-00505,Remote,
+Stark Mockworks,Robin Vikoson,Technical Recruiter,robin.vikoson@hr6.example.com,+1 415 555 0006,linkedin.com/in/synthetic-00506,Remote,
+Wayne Placeholder,Drew Vikoson,Technical Recruiter,drew.vikoson@hr0.example.com,+1 415 555 0007,linkedin.com/in/synthetic-00507,Remote,
+Wonka Synthetic,Kai Vikoson,Technical Recruiter,kai.vikoson@hr1.example.com,+1 415 555 0008,linkedin.com/in/synthetic-00508,Remote,
+Soylent Testing,Noor Vikoson,Technical Recruiter,noor.vikoson@hr2.example.com,+1 415 555 0009,linkedin.com/in/synthetic-00509,Remote,
+Tyrell Samples,Ravi Vikoson,Technical Recruiter,ravi.vikoson@hr3.example.com,+1 415 555 0010,linkedin.com/in/synthetic-00510,Remote,
+Cyberdyne Fake,Mei Vikoson,Technical Recruiter,mei.vikoson@hr4.example.com,+1 415 555 0011,linkedin.com/in/synthetic-00511,Remote,
+Acme Test Co,Alex Markoson,Technical Recruiter,alex.markoson@hr5.example.com,+1 415 555 0012,linkedin.com/in/synthetic-00512,Remote,
+Northwind Labs,Sam Markoson,Technical Recruiter,sam.markoson@hr6.example.com,+1 415 555 0013,linkedin.com/in/synthetic-00513,Remote,
+Globex Example,Jordan Markoson,Technical Recruiter,jordan.markoson@hr0.example.com,+1 415 555 0014,linkedin.com/in/synthetic-00514,Remote,
+Initech Sample,Taylor Markoson,Technical Recruiter,taylor.markoson@hr1.example.com,+1 415 555 0015,linkedin.com/in/synthetic-00515,Remote,
+Umbrella Demo,Riley Markoson,Technical Recruiter,riley.markoson@hr2.example.com,+1 415 555 0016,linkedin.com/in/synthetic-00516,Remote,
+Hooli Fixture,Casey Markoson,Technical Recruiter,casey.markoson@hr3.example.com,+1 415 555 0017,linkedin.com/in/synthetic-00517,Remote,
+Stark Mockworks,Morgan Markoson,Technical Recruiter,morgan.markoson@hr4.example.com,+1 415 555 0018,linkedin.com/in/synthetic-00518,Remote,
+Wayne Placeholder,Jamie Markoson,Technical Recruiter,jamie.markoson@hr5.example.com,+1 415 555 0019,linkedin.com/in/synthetic-00519,Remote,

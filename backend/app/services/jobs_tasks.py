@@ -22,12 +22,17 @@ def run_discovery(db: Session, board_ids: list[str] | None, fetcher: PoliteFetch
     run = DiscoveryRun()
     db.add(run)
     db.flush()
+    from ..models.core import UserSetting
+    toggles = db.query(UserSetting).filter(UserSetting.key == "sources.enabled").first()
+    disabled = {k for k, v in (toggles.value if toggles else {}).items() if v is False}
     now, cov, new_jobs, total = utcnow(), [], 0, 0
     names = {c.id: c.name for c in db.query(Company.id, Company.name).all()}
     for i, b in enumerate(boards):
         entry = {"board_id": b.id, "company": names.get(b.company_id), "ats": b.ats, "token": b.token, "reachable": False, "jobs": 0, "error": None}
         fetcher.respect_robots = False  # documented public JSON endpoints; robots is re-enabled for page fetches
         try:
+            if b.ats in disabled:
+                raise ats.AtsError("Source disabled in your settings")
             raws = ats.list_jobs(fetcher, b.ats, b.token)
         except ats.BoardNotFound:
             entry["error"] = "Board not found: check the token"

@@ -587,3 +587,68 @@ def test_no_module_other_than_the_providers_can_deliver_email():
     from pathlib import Path
     senders = sorted(str(p.as_posix()) for p in Path("app").rglob("*.py") if ".send(" in p.read_text(encoding="utf-8") and "providers.py" not in p.name and "linkedin_stub" not in p.name)
     assert senders == ["app/api/outreach.py", "app/services/outreach/send.py"]
+
+
+# ---------------------------------------------------------------- sending is a background job and can never double-send
+def test_claiming_a_message_is_atomic(env, mk):
+    a = mk("a@example.com")
+    prep(a)
+    gen(a)
+    approve_emails(a)
+    mid = emails_(a)[0]["id"]
+    s1, s2 = scoped(a), scoped(a)  # two runners that both loaded the same queued message
+    m1, m2 = s1.get(OutreachMessage, mid), s2.get(OutreachMessage, mid)
+    assert m1.send_state == m2.send_state == "queued"
+    assert osend.claim(s1, m1) is True
+    assert osend.claim(s2, m2) is False  # the second runner loses, even though its copy still says "queued"
+
+
+def test_two_sender_runs_deliver_each_email_once(env, mk):
+    a = mk("a@example.com")
+    prep(a)
+    gen(a)
+    approve_emails(a)
+    s1, s2 = scoped(a), scoped(a)
+    cfg = osettings.get(s1)
+    r1 = osend.send_outbox(s1, cfg, commit_each=True)
+    r2 = osend.send_outbox(s2, cfg, commit_each=True)
+    assert r1["sent"] == 2 and r2["sent"] == 0 and len(outbox(a)) == 2
+
+
+def test_send_runs_as_a_background_task_not_inside_the_request(env, mk, monkeypatch):
+    from app import tasks
+    from app.config import get_settings
+    a = mk("a@example.com")
+    prep(a)
+    gen(a)
+    approve_emails(a)
+    monkeypatch.setenv("TASKS_INLINE", "0")
+    get_settings.cache_clear()
+    try:
+        r = a.post("/api/outreach/send", {})
+        assert r.status_code == 202 and r.json()["task_status"] == "queued" and "sent" not in r.json() and not outbox(a)  # accepted, nothing sent yet
+        again = a.post("/api/outreach/send", {}).json()
+        assert again["task_id"] == r.json()["task_id"]  # a second click joins the running job instead of starting another
+        assert tasks.run_task() is True  # the worker picks it up
+        t = a.get(f"/api/tasks/{r.json()['task_id']}").json()
+        assert t["status"] == "done" and t["result"]["sent"] == 2 and len(outbox(a)) == 2
+    finally:
+        monkeypatch.undo()
+        get_settings.cache_clear()
+
+
+def test_long_pacing_keeps_the_task_heartbeat_alive(env):
+    from app.services.outreach.send_task import heartbeat_sleep
+    beats, slept = [], []
+    ctx = type("C", (), {"update": lambda self, **k: beats.append(1)})()
+    import time as _t
+    real = _t.sleep
+    _t.sleep = lambda s: slept.append(s)  # no real waiting
+    try:
+        mono = iter(x * 20.0 for x in range(0, 100))
+        orig_mono = _t.monotonic
+        _t.monotonic = lambda: next(mono)
+        heartbeat_sleep(ctx, chunk=20.0)(60)
+    finally:
+        _t.sleep, _t.monotonic = real, orig_mono
+    assert len(beats) >= 2 and all(s <= 20.0 for s in slept)  # a 60 s pause is slept in short chunks, refreshing the heartbeat each time

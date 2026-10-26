@@ -207,10 +207,11 @@ def _summary(prof: dict, usable: list[dict], job: dict, exp_out: list, proj_out:
     used = [(w.get(n, 0), n, s) for n, s in prof["skills"].items() if s["best"] in ("USED_PROFESSIONALLY", "USED_IN_PROJECT") and not s["conflict"] and w.get(n)]
     used.sort(key=lambda t: (-t[0], t[1]))
     top = used[:3]
+    uids = {u["id"] for u in usable}  # a summary may only cite ACTIVE, conflict-free facts, never unconfirmed suggestions
     sents = []
     if lead and top:
         names = [n for _, n, _ in top]
-        fids = ids + [x for _, _, s in top for x in s["item_ids"]]
+        fids = ids + [x for _, _, s in top for x in s["item_ids"] if x in uids]
         sents.append((f"{lead} with hands-on experience using {_list(names)}.", fids))
     elif lead:
         sents.append((f"{lead}.", ids))

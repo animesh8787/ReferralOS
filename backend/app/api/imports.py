@@ -86,6 +86,12 @@ def start_import(import_id: str, body: StartIn, user: User = Depends(current_use
     if not any(imp.mapping.values()):
         raise HTTPException(422, "Map at least one column")
     imp.region = body.region.upper()[:2]
+    try:  # remember which columns were NOT used, for the diagnostics page
+        text, _, _ = csv_import.decode(storage.get(user.id, "imports", imp.id, ".csv"))
+        rows = csv_import.read_rows(text, imp.delimiter)
+        imp.report = {**(imp.report or {}), "unmapped_columns": csv_import.unmapped([h.strip() for h in rows[imp.header_row]], imp.mapping)}
+    except (OSError, ValueError, IndexError):
+        pass
     db.commit()
     t = tasks.enqueue(db, "import_contacts", {"import_id": imp.id})
     audit(db, user.id, "import_started", import_id=imp.id, provenance=imp.provenance)

@@ -4,7 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import Pager from "@/components/Pager";
 import StatusBadge from "@/components/StatusBadge";
-import { api } from "@/lib/api";
+import { api, settle } from "@/lib/api";
 
 type Elig = { key: string; status: string; reason: string; action?: string };
 type Contact = { contact_id: string; name: string; position: string | null; score: number; employment: string; also_fits_jobs: string[]; linkedin_url: string | null; note: string };
@@ -27,7 +27,7 @@ export default function Opportunities() {
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div><h1 className="text-xl font-semibold">Opportunities</h1>
           <p className="text-sm text-gray-600">Ranked by usefulness to you, not company prestige. Verified, eligible openings always come first; an uncertain role with a high match is shown with the trade-off.</p></div>
-        <button disabled={busy} className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50" onClick={async () => { setBusy(true); try { await api("/matching/run", { body: {} }); await mutate(); } finally { setBusy(false); } }}>Re-analyse my jobs</button>
+        <button disabled={busy} className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50" onClick={async () => { setBusy(true); try { await settle(await api<{ task_id: string; status: string }>("/matching/run", { body: {} })); await mutate(); } finally { setBusy(false); } }}>Re-analyse my jobs</button>
       </header>
       <label className="text-sm">Show <select className="rounded border px-1 py-1" value={group} onChange={(e) => { setGroup(e.target.value); setPage(1); }}>
         <option value="">everything</option><option value="0">verified and eligible</option><option value="1">verified, eligibility to confirm</option><option value="2">not yet verified</option><option value="3">open but ineligible</option><option value="4">closed or likely closed</option></select></label>

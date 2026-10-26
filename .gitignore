@@ -15,3 +15,5 @@ __pycache__/
 playwright-report/
 test-results/
 .pytest_cache/
+synthetic_out/
+data-e2e/

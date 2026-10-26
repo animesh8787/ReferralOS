@@ -26,7 +26,7 @@ export default function MessagePage() {
   if (!m) return <p role="status">Loading…</p>;
   const sent = ["sent", "manual_sent", "sending", "delivery_unconfirmed"].includes(m.send_state);
   const dirty = (subject !== null && subject !== m.subject) || (body !== null && body !== m.body);
-  const act = async (fn: () => Promise<unknown>, ok: string) => { setMsg(""); try { await fn(); setMsg(ok); setSubject(null); setBody(null); mutate(); events.mutate(); } catch (e) { setMsg((e as Error).message); } };
+  const act = async (fn: () => Promise<unknown>, ok: string) => { setMsg(""); try { const r = await fn(); setMsg(typeof r === "string" ? r : ok); setSubject(null); setBody(null); mutate(); events.mutate(); } catch (e) { setMsg((e as Error).message); } };
 
   return (
     <div className="mx-auto grid max-w-4xl gap-4 text-sm">
@@ -74,7 +74,7 @@ export default function MessagePage() {
       {sent && (
         <section aria-labelledby="rp"><h2 id="rp" className="font-medium">Record a reply</h2>
           <textarea aria-label="Reply text" rows={3} className="w-full rounded border px-2 py-1" placeholder="Paste their reply or bounce notice" value={reply} onChange={(e) => setReply(e.target.value)} />
-          <button disabled={!reply.trim()} className="mt-1 rounded border px-3 py-1 disabled:opacity-40" onClick={() => act(async () => { const r = await api<{ label: string; needs_confirmation: string | null }>(`/outreach/messages/${id}/reply`, { body: { body: reply, from_addr: m.to_email ?? "" } }); setReply(""); setMsg(`Recorded as: ${r.label.replace("_", " ")}. ${r.needs_confirmation ?? ""}`); }, "Reply recorded.")}>Record reply</button></section>)}
+          <button disabled={!reply.trim()} className="mt-1 rounded border px-3 py-1 disabled:opacity-40" onClick={() => act(async () => { const r = await api<{ label: string; needs_confirmation: string | null }>(`/outreach/messages/${id}/reply`, { body: { body: reply, from_addr: m.to_email ?? "" } }); setReply(""); return `Recorded as: ${r.label.replace("_", " ")}. ${r.needs_confirmation ?? ""}`; }, "Reply recorded.")}>Record reply</button></section>)}
 
       <section aria-labelledby="ev"><h2 id="ev" className="font-medium">History</h2>
         <ul className="grid gap-1 text-xs">{events.data?.map((e) => <li key={e.id} className="rounded border px-2 py-1">{new Date(e.at + "Z").toLocaleString()} · <strong>{e.type.replaceAll("_", " ")}</strong>{e.label && ` (${e.label.replace("_", " ")})`}

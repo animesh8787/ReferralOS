@@ -1,0 +1,61 @@
+First Name,Last Name,URL,Email Address,Company,Position,Connected On
+Alex,Banson,https://www.linkedin.com/in/synthetic-00001,,Acme Test Co,Senior Backend Engineer,01 Jun 2026
+Sam,Koson,https://www.linkedin.com/in/synthetic-00002,,Acme Test Co,Technical Recruiter,01 Mar 2026
+Jordan,Renson,https://www.linkedin.com/in/synthetic-00003,,Acme Test Co,Engineering Manager,01 Feb 2026
+Taylor,Talson,https://www.linkedin.com/in/synthetic-00004,,Acme Test Co,Product Manager,01 Feb 2026
+Quinn,Vason,https://www.linkedin.com/in/synthetic-00005,,Acme Test Co,Frontend Engineer,01 Jan 2020
+Robin,Mason,https://www.linkedin.com/in/synthetic-00006,,Acme Test Co,Staff Engineer,
+Riley,Sobason,https://www.linkedin.com/in/synthetic-00100,riley.sobason@example.com,Umbrella Demo Pvt Ltd,Senior Software Engineer,17 Mar 2023
+Casey,Sobason,https://www.linkedin.com/in/synthetic-00101,,"Hooli Fixture, Inc",Engineering Manager,18 Mar 2023
+Morgan,Sobason,https://www.linkedin.com/in/synthetic-00102,,Stark Mockworks,Technical Recruiter,19 Mar 2023
+Jamie,Sobason,https://www.linkedin.com/in/synthetic-00103,,Wayne Placeholder Inc.,Staff Engineer,20 Mar 2023
+Quinn,Sobason,https://www.linkedin.com/in/synthetic-00104,,Wonka Synthetic LLC,Data Scientist,21 Mar 2023
+Avery,Sobason,https://www.linkedin.com/in/synthetic-00105,avery.sobason@example.com,Soylent Testing Ltd,Talent Acquisition Partner,22 Mar 2023
+Robin,Sobason,https://www.linkedin.com/in/synthetic-00106,,Tyrell Samples Pvt Ltd,Product Manager,23 Mar 2023
+Drew,Sobason,https://www.linkedin.com/in/synthetic-00107,,"Cyberdyne Fake, Inc",Backend Developer,24 Mar 2023
+Kai,Sobason,https://www.linkedin.com/in/synthetic-00108,,Acme Test Co,ML Engineer,25 Mar 2023
+Noor,Sobason,https://www.linkedin.com/in/synthetic-00109,,Northwind Labs Inc.,Director of Engineering,26 Mar 2023
+Ravi,Sobason,https://www.linkedin.com/in/synthetic-00110,ravi.sobason@example.com,Globex Example LLC,Software Engineer,27 Mar 2023
+Mei,Sobason,https://www.linkedin.com/in/synthetic-00111,,Initech Sample Ltd,Senior Software Engineer,28 Mar 2023
+Alex,Linbason,https://www.linkedin.com/in/synthetic-00112,,Umbrella Demo Pvt Ltd,Engineering Manager,01 Mar 2023
+Sam,Linbason,https://www.linkedin.com/in/synthetic-00113,,"Hooli Fixture, Inc",Technical Recruiter,02 Mar 2023
+Jordan,Linbason,https://www.linkedin.com/in/synthetic-00114,,Stark Mockworks,Staff Engineer,03 Mar 2023
+Taylor,Linbason,https://www.linkedin.com/in/synthetic-00115,taylor.linbason@example.com,Wayne Placeholder Inc.,Data Scientist,04 Mar 2023
+Riley,Linbason,https://www.linkedin.com/in/synthetic-00116,,Wonka Synthetic LLC,Talent Acquisition Partner,05 Mar 2023
+Casey,Linbason,https://www.linkedin.com/in/synthetic-00117,,Soylent Testing Ltd,Product Manager,06 Mar 2023
+Morgan,Linbason,https://www.linkedin.com/in/synthetic-00118,,Tyrell Samples Pvt Ltd,Backend Developer,07 Mar 2023
+Jamie,Linbason,https://www.linkedin.com/in/synthetic-00119,,"Cyberdyne Fake, Inc",ML Engineer,08 Mar 2023
+Quinn,Linbason,https://www.linkedin.com/in/synthetic-00120,quinn.linbason@example.com,Acme Test Co,Director of Engineering,09 Mar 2023
+Avery,Linbason,https://www.linkedin.com/in/synthetic-00121,,Northwind Labs Inc.,Software Engineer,10 Mar 2023
+Robin,Linbason,https://www.linkedin.com/in/synthetic-00122,,Globex Example LLC,Senior Software Engineer,11 Mar 2023
+Drew,Linbason,https://www.linkedin.com/in/synthetic-00123,,Initech Sample Ltd,Engineering Manager,12 Mar 2023
+Kai,Linbason,https://www.linkedin.com/in/synthetic-00124,,Umbrella Demo Pvt Ltd,Technical Recruiter,13 Mar 2023
+Noor,Linbason,https://www.linkedin.com/in/synthetic-00125,noor.linbason@example.com,"Hooli Fixture, Inc",Staff Engineer,14 Mar 2023
+Ravi,Linbason,https://www.linkedin.com/in/synthetic-00126,,Stark Mockworks,Data Scientist,15 Mar 2023
+Mei,Linbason,https://www.linkedin.com/in/synthetic-00127,,Wayne Placeholder Inc.,Talent Acquisition Partner,16 Mar 2023
+Alex,Derbason,https://www.linkedin.com/in/synthetic-00128,,Wonka Synthetic LLC,Product Manager,17 Mar 2023
+Sam,Derbason,https://www.linkedin.com/in/synthetic-00129,,Soylent Testing Ltd,Backend Developer,18 Mar 2023
+Jordan,Derbason,https://www.linkedin.com/in/synthetic-00130,jordan.derbason@example.com,Tyrell Samples Pvt Ltd,ML Engineer,19 Mar 2023
+Taylor,Derbason,https://www.linkedin.com/in/synthetic-00131,,"Cyberdyne Fake, Inc",Director of Engineering,20 Mar 2023
+Riley,Derbason,https://www.linkedin.com/in/synthetic-00132,,Acme Test Co,Software Engineer,21 Mar 2023
+Casey,Derbason,https://www.linkedin.com/in/synthetic-00133,,Northwind Labs Inc.,Senior Software Engineer,22 Mar 2023
+Morgan,Derbason,https://www.linkedin.com/in/synthetic-00134,,Globex Example LLC,Engineering Manager,23 Mar 2023
+Jamie,Derbason,https://www.linkedin.com/in/synthetic-00135,jamie.derbason@example.com,Initech Sample Ltd,Technical Recruiter,24 Mar 2023
+Quinn,Derbason,https://www.linkedin.com/in/synthetic-00136,,Umbrella Demo Pvt Ltd,Staff Engineer,25 Mar 2023
+Avery,Derbason,https://www.linkedin.com/in/synthetic-00137,,"Hooli Fixture, Inc",Data Scientist,26 Mar 2023
+Robin,Derbason,https://www.linkedin.com/in/synthetic-00138,,Stark Mockworks,Talent Acquisition Partner,27 Mar 2023
+Drew,Derbason,https://www.linkedin.com/in/synthetic-00139,,Wayne Placeholder Inc.,Product Manager,28 Mar 2023
+Kai,Derbason,https://www.linkedin.com/in/synthetic-00140,kai.derbason@example.com,Wonka Synthetic LLC,Backend Developer,01 Mar 2023
+Noor,Derbason,https://www.linkedin.com/in/synthetic-00141,,Soylent Testing Ltd,ML Engineer,02 Mar 2023
+Ravi,Derbason,https://www.linkedin.com/in/synthetic-00142,,Tyrell Samples Pvt Ltd,Director of Engineering,03 Mar 2023
+Mei,Derbason,https://www.linkedin.com/in/synthetic-00143,,"Cyberdyne Fake, Inc",Software Engineer,04 Mar 2023
+Alex,Fabason,https://www.linkedin.com/in/synthetic-00144,,Acme Test Co,Senior Software Engineer,05 Mar 2023
+Sam,Fabason,https://www.linkedin.com/in/synthetic-00145,sam.fabason@example.com,Northwind Labs Inc.,Engineering Manager,06 Mar 2023
+Jordan,Fabason,https://www.linkedin.com/in/synthetic-00146,,Globex Example LLC,Technical Recruiter,07 Mar 2023
+Taylor,Fabason,https://www.linkedin.com/in/synthetic-00147,,Initech Sample Ltd,Staff Engineer,08 Mar 2023
+Riley,Fabason,https://www.linkedin.com/in/synthetic-00148,,Umbrella Demo Pvt Ltd,Data Scientist,09 Mar 2023
+Casey,Fabason,https://www.linkedin.com/in/synthetic-00149,,"Hooli Fixture, Inc",Talent Acquisition Partner,10 Mar 2023
+Morgan,Fabason,https://www.linkedin.com/in/synthetic-00150,morgan.fabason@example.com,Stark Mockworks,Product Manager,11 Mar 2023
+Jamie,Fabason,https://www.linkedin.com/in/synthetic-00151,,Wayne Placeholder Inc.,Backend Developer,12 Mar 2023
+Quinn,Fabason,https://www.linkedin.com/in/synthetic-00152,,Wonka Synthetic LLC,ML Engineer,13 Mar 2023
+Avery,Fabason,https://www.linkedin.com/in/synthetic-00153,,Soylent Testing Ltd,Director of Engineering,14 Mar 2023

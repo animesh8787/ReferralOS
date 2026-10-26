@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import Base
 from .. import storage
 
+SECRET_SETTINGS = {"llm.key", "oauth.gmail.pending"}  # rows in user_settings that hold secrets: never exported
 SECRET_COLS = {"password_hash", "token_hash", "csrf_token", "encrypted_access", "encrypted_refresh", "encrypted_key"}
 
 
@@ -21,7 +22,7 @@ def export_user(db: Session, user_id: str) -> dict:
     for t in _user_tables():
         cols = [c for c in t.c if c.name not in SECRET_COLS]
         rows = db.execute(select(*cols).where(t.c.user_id == user_id)).mappings().all()
-        out[t.name] = [dict(r) for r in rows]
+        out[t.name] = [dict(r) for r in rows if not (t.name == "user_settings" and r["key"] in SECRET_SETTINGS)]
     u = Base.metadata.tables["users"]
     row = db.execute(select(u.c.id, u.c.email, u.c.display_name, u.c.created_at).where(u.c.id == user_id)).mappings().first()
     out["users"] = [dict(row)] if row else []

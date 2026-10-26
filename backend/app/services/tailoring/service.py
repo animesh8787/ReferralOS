@@ -88,7 +88,7 @@ def create(db: Session, job: Job, options: dict | None = None, parent: TailoredR
     matrix = matching.build_matrix(analysis, prof)
     jinfo = {"title": job.title, "company": (db.get(Company, job.company_id).name if job.company_id else None), "employment_type": job.employment_type,
              "domains": job_domains(job, analysis)}
-    llm = get_provider()
+    llm = get_provider(db)
     built = engine.build(items, analysis, matrix, jinfo, options, llm=None if isinstance(llm, NoLLM) else llm)
     return _finish(db, job, built["content"], built["ledger"], items, analysis, matrix, built["notes"], built["questions"], options or {}, parent)
 

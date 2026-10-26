@@ -88,7 +88,7 @@ def import_contacts(ctx):
             ctx.update(progress=min(0.99, (n - imp.header_row) / total), checkpoint={"row": n, "report": rep})
             pending = 0
     rep["reviews"] = resolver.reviews_created
-    imp.report, imp.status = rep, "done"
+    imp.report, imp.status = {**(imp.report or {}), **rep}, "done"
     if not hr:
         enqueue_nowait(db, "score_contacts")  # follow-up: rank the new connections
     return rep
