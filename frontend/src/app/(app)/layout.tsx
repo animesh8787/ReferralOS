@@ -21,6 +21,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <nav aria-label="Main" className="flex gap-4 text-sm">
           <Link href="/dashboard" className="font-semibold">ReferralOS</Link>
           <Link href="/profile">Profile</Link>
+          <Link href="/imports">Imports</Link>
+          <Link href="/contacts">Contacts</Link>
+          <Link href="/suppression">Do-not-contact</Link>
         </nav>
         <button
           className="text-sm underline"

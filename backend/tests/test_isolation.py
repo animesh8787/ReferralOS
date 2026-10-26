@@ -38,7 +38,17 @@ def test_every_id_route_is_isolated(env, mk):
     prof = a.get("/api/profile").json()
     item = prof["items"]["experience"][0]["id"]
     version = a.get("/api/profile/versions").json()[0]["id"]
-    known = {"task_id": up["task_id"], "resume_id": up["resume_id"], "item_id": item, "version_id": version}
+    from tests import synth_contacts as sc
+    from tests.test_imports import do_import
+    U = "https://www.linkedin.com/in/synthetic-"
+    prev, _ = do_import(a, sc.to_csv(sc.LI_HEADER, [["Alex", "Banson", U + "1", "", "Northwind Labs", "", ""], ["Sam", "Koson", U + "2", "", "Northwnd Labs", "", ""]], preamble=""))
+    pending = a.c.post("/api/imports", data={"kind": "linkedin"}, files={"file": ("c.csv", sc.linkedin_csv(2))}, headers=a._h()).json()["import_id"]
+    contact = a.get("/api/contacts").json()["items"][0]["id"]
+    review = a.get("/api/company-reviews").json()[0]["id"]
+    a.post("/api/suppression", {"value": "x@example.com"})
+    supp = a.get("/api/suppression").json()["items"][0]["id"]
+    known = {"task_id": up["task_id"], "resume_id": up["resume_id"], "item_id": item, "version_id": version,
+             "import_id": pending, "contact_id": contact, "review_id": review, "entry_id": supp}
     walked = []
     for r in app.routes:
         params = list(getattr(r, "param_convertors", {}))
@@ -55,7 +65,7 @@ def test_every_id_route_is_isolated(env, mk):
             assert resp.status_code in (404, 405, 422), f"{m} {url} as other user -> {resp.status_code}"
             walked.append((m, r.path))
         assert a.get(url).status_code in (200, 405) if "GET" in r.methods else True
-    assert len(walked) >= 7  # tasks, resume x2, item patch/delete/confirm, version
+    assert len(walked) >= 12  # tasks, resumes, profile items/versions, imports, contacts, reviews, suppression
     # B's attempts (including DELETE/PATCH) must not have damaged A's data
     assert a.get("/api/profile").json()["items"]["experience"][0]["id"] == item
 
