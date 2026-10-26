@@ -1,6 +1,6 @@
 """Imports every module that registers @handler task kinds. Add new task modules here."""
 from . import tasks
-from .services import contacts_import, profile_tasks, scoring_run  # noqa: F401
+from .services import contacts_import, jobs_tasks, profile_tasks, scoring_run  # noqa: F401
 
 
 @tasks.handler("noop")

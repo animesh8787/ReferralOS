@@ -28,6 +28,9 @@ def _json(data, status=200, headers=None):
 
 
 def handler(request: httpx.Request) -> httpx.Response:
+    from . import fake_ats
+    if (r := fake_ats.handler(request)) is not None:
+        return r
     host, path = request.url.host, request.url.path
     if host == "api.github.com":
         if path == "/users/ratelimited" or path.startswith("/users/ratelimited/"):

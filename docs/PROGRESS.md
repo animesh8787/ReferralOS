@@ -7,10 +7,11 @@
 | 3 Profile | done |
 | 4 Contacts | done |
 | 5 Scoring core | done |
-| 6 Jobs | next |
-| 7-12 | pending |
+| 6 Jobs | done |
+| 7 Matching | next |
+| 8-12 | pending |
 
-Tests: backend 140 passing (`cd backend && uv run pytest -p no:warnings`).
+Tests: backend 188 passing (`cd backend && uv run pytest -p no:warnings`).
 Phase 3 covers: PDF/DOCX parsing (single/two-column/table/image-only/corrupt), span-traceable extraction, skill evidence levels,
 conflict/duplicate/date-order flags, profile versions, completeness + questions, GitHub + portfolio import against fakes
 (404, rate limit, fork, tutorial flag, robots, SSRF), polite fetcher, consents, isolation walker over all id routes.
@@ -38,3 +39,15 @@ Measured (SQLite, synthetic): scoring 11,000 contacts 9.4s (~1,170/s); prospects
 xlsx export of 11,000 rows 7.9s; LinkedIn import 11,000 rows 17.4s including the automatic scoring follow-up.
 Known gaps: employment status is inferred from connection age only (never verified); hiring relevance has no open-role input until
 Phase 6; role keyword rules are English-only and untested on real titles.
+
+Phase 6 covers: Greenhouse/Lever/Ashby/Workable/SmartRecruiters adapters + schema.org JobPosting parser, user-confirmed boards
+(suggestions are candidates only, with sample titles), discovery task with honest coverage report (reachable boards, companies you
+know people at that have no reachable board), canonical dedup (same source id -> same apply URL -> same company + similar title/
+compatible place; private pasted jobs never merged across users), verification state machine (all 5 statuses, 21 table cases incl.
+200-is-not-proof, 404-alone-is-not-closed, stale evidence, contradictory same-time evidence resolves conservatively), referral-route
+discovery (programme can only be VERIFIED from an official page; absence = NO_PUBLIC_EVIDENCE; unreadable = UNKNOWN), Jobs UI.
+INTEGRATION STATUS: all five ATS adapters were written from vendor docs and tested ONLY against hand-built fixtures (app/adapters/
+fake_ats.py). They have never been run against live services; payload-shape mistakes are possible. Planned: one read-only smoke
+check per ATS in Phase 11 if network access is allowed.
+Known gaps: no job-detail fetch for SmartRecruiters descriptions (list endpoint has none); location compatibility is city-string based.
+Perf numbers vary by run (SQLite, synthetic): 11k LinkedIn import 7.8-17.4s incl. auto-scoring; scoring 11k 5.2-9.4s.
