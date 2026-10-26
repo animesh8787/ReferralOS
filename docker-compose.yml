@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    environment: {POSTGRES_USER: referralos, POSTGRES_PASSWORD: change-me, POSTGRES_DB: referralos}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U referralos"], interval: 5s, retries: 10}
+  api:
+    build: ./backend
+    env_file: .env
+    environment: {DATA_DIR: /data}
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes: [userdata:/data]
+    depends_on: {db: {condition: service_healthy}}
+    ports: ["8000:8000"]
+  worker:
+    build: ./backend
+    env_file: .env
+    environment: {DATA_DIR: /data}
+    command: python -m app.worker
+    volumes: [userdata:/data]
+    depends_on: {db: {condition: service_healthy}}
+  web:
+    build: ./frontend
+    environment: {BACKEND_URL: "http://api:8000"}
+    depends_on: [api]
+    ports: ["3000:3000"]
+volumes: {pgdata: {}, userdata: {}}
