@@ -10,10 +10,11 @@
 | 6 Jobs | done |
 | 7 Matching | done |
 | 8 Tailoring | done |
-| 9 Outreach | next |
-| 10-12 | pending |
+| 9 Outreach | done |
+| 10 Frontend integration | next |
+| 11-12 | pending |
 
-Tests: backend 257 passing (`cd backend && uv run pytest -p no:warnings`).
+Tests: backend 366 passing (`cd backend && uv run pytest -p no:warnings`).
 Phase 3 covers: PDF/DOCX parsing (single/two-column/table/image-only/corrupt), span-traceable extraction, skill evidence levels,
 conflict/duplicate/date-order flags, profile versions, completeness + questions, GitHub + portfolio import against fakes
 (404, rate limit, fork, tutorial flag, robots, SSRF), polite fetcher, consents, isolation walker over all id routes.
@@ -79,3 +80,22 @@ explicit confirm-claim path into the master (new profile version), compare, work
 Acceptance 13 and 14 covered by API tests.
 Known gaps: no spell/grammar checker (text is verbatim user text or fixed templates); no hosted LLM client (interface + validation
 only; NoLLM default); PDF fonts are Latin-1 only (other scripts become '?'); role-type layouts are heuristic.
+
+Phase 9 covers: referral drafts (LinkedIn, manual send) and cold emails (job-specific / introductory / follow-up / thank-you) built only
+from supplied facts, with a forbidden-claim guard, placeholder detection, claim ledger checked against the profile, A/B variants that
+the user chooses; ONE preflight gate (approve-stage content rules + send-stage rules) used by every path, with named block codes:
+NOT_APPROVED, MANUAL_MODE, NO_PROVIDER, GLOBAL_PAUSE, CAMPAIGN_PAUSED, SUPPRESSED_EMAIL/DOMAIN, DO_NOT_CONTACT, DUPLICATE_INITIAL,
+BULK_BLOCKED_PROVENANCE, JOB_NOT_ACTIVE/JOB_CLOSED/JOB_STALE, ACK_REQUIRED, CONSENT_REGION_ACK_REQUIRED, DAILY/COMPANY/INTRO/CAMPAIGN
+limits (hard maximums 100/20, warnings above 20/5), FOLLOWUP_LIMIT/SPACING, UNRESOLVED_PLACEHOLDER, MISSING_OPT_OUT, DECEPTIVE_SUBJECT,
+FORBIDDEN_CLAIM, UNVERIFIED_CLAIMS, ATTACHMENT_INVALID, CHANNEL_NOT_SENDABLE; edits withdraw approval; approve-many needs count +
+daily-limit confirmation; paced sending; ambiguous result => DELIVERY_UNCONFIRMED, never re-sent, reconcile by our Message-ID or manual
+resolve; hard failure => failed (not retried); dry-run; self-addressed test email; manual mode (.eml, mailto, mark sent); reply/bounce
+classification (hard bounce auto-suppresses only on explicit permanent-failure text; opt-out is a suggestion until confirmed);
+follow-up DRAFTS (capped, spaced, cancelled on reply/bounce/opt-out/closed job/pause); pipeline statuses with evidence rule;
+campaigns; tokens encrypted at rest and never returned; per-user audit log; Outreach/Settings/Message/Tracking UI (build only).
+Bugs found by tests and fixed: soft bounce (mailbox full) from mailer-daemon was classified hard and would have suppressed a valid
+address; a SENT follow-up counted as a 'waiting' draft; expire_all() in batch generation discarded the refreshed verification.
+INTEGRATION STATUS: Gmail send/find/replies and the OAuth code exchange are verified ONLY against httpx.MockTransport (request shape,
+base64 MIME, outcome classification, token refresh). They have never touched Google. The mock provider is what runs offline.
+Known gaps: language is English only (flagged for non-English regions); no spell checker; LinkedIn is manual by design (disabled stub
+documented in adapters/linkedin_stub.py); open/click tracking is not implemented (off by spec default); SMTP adapter not built.

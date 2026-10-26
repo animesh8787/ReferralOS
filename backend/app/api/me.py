@@ -49,3 +49,12 @@ def get_task(task_id: str, db: Session = Depends(scoped_db)):
 def _task(t: BackgroundTask) -> dict:
     return {"id": t.id, "kind": t.kind, "status": t.status, "progress": t.progress, "attempts": t.attempts,
             "error": t.error, "result": t.result}
+
+
+@router.get("/me/audit")
+def my_audit(page: int = 1, page_size: int = 50, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """The user's own audit trail (logins, imports, exports, approvals, sends, deletions). Metadata only."""
+    from ..models.core import AuditLog
+    q = db.query(AuditLog).filter(AuditLog.user_id == user.id).order_by(AuditLog.created_at.desc(), AuditLog.id)
+    n = min(max(page_size, 1), 200)
+    return {"total": q.count(), "items": [{"at": r.created_at, "action": r.action, "detail": r.detail} for r in q.offset((max(page, 1) - 1) * n).limit(n).all()]}

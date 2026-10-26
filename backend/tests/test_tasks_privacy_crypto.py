@@ -129,3 +129,11 @@ def test_storage_blocks_traversal(env):
         storage.path_for("../evil", "resumes", "a" * 32)
     with pytest.raises(ValueError):
         storage.path_for(uid, "resumes", "a" * 32, "/../x")
+
+
+def test_audit_log_endpoint_is_per_user_and_metadata_only(env, mk):
+    a, b = mk("a@example.com"), mk("b@example.com")
+    a.get("/api/me/export")
+    ra, rb = a.get("/api/me/audit").json(), b.get("/api/me/audit").json()
+    assert "data_exported" in {i["action"] for i in ra["items"]} and "data_exported" not in {i["action"] for i in rb["items"]}
+    assert "a@example.com" not in str(ra) and ra["total"] >= 4

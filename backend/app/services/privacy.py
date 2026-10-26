@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import Base
 from .. import storage
 
-SECRET_COLS = {"password_hash", "token_hash", "csrf_token", "encrypted_token", "encrypted_key"}
+SECRET_COLS = {"password_hash", "token_hash", "csrf_token", "encrypted_access", "encrypted_refresh", "encrypted_key"}
 
 
 def _user_tables():

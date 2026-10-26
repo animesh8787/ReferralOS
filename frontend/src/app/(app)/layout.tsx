@@ -28,6 +28,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/jobs">Jobs</Link>
           <Link href="/opportunities">Opportunities</Link>
           <Link href="/resumes">Resumes</Link>
+          <Link href="/outreach">Outreach</Link>
+          <Link href="/tracking">Tracking</Link>
           <Link href="/suppression">Do-not-contact</Link>
         </nav>
         <button

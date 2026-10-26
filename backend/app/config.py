@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     session_hours: int = 24 * 7
     tasks_inline: bool = False  # tests/dev: run background tasks synchronously
     adapter_mode: str = "mock"  # mock | real
+    google_client_id: str = ""  # Gmail OAuth app (optional; unset = mock mode only)
+    google_client_secret: str = ""
     cors_origins: list[str] = ["http://localhost:3000"]
     require_email_verification: bool = True
     # hard maximums for outbound email, below the published Gmail limits
