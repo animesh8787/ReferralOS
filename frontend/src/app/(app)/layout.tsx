@@ -23,6 +23,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/profile">Profile</Link>
           <Link href="/imports">Imports</Link>
           <Link href="/contacts">Contacts</Link>
+          <Link href="/prospects">Prospects</Link>
+          <Link href="/companies">Companies</Link>
           <Link href="/suppression">Do-not-contact</Link>
         </nav>
         <button

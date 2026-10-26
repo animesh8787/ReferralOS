@@ -102,3 +102,18 @@ def test_responses_are_cached():
     f.get("https://site.test/a")
     f.get("https://site.test/a")
     assert len(n) == 1
+
+
+def test_worker_registers_every_task_kind():
+    """The worker process imports only app.handlers; every enqueue()d kind must be registered through it."""
+    import re
+    import subprocess
+    import sys
+    code = "import app.handlers, app.tasks as t; print(sorted(t.HANDLERS))"
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
+    from pathlib import Path
+    used = set()
+    for p in Path("app").rglob("*.py"):
+        used |= set(re.findall(r'enqueue(?:_nowait)?\(\w+, "(\w+)"', p.read_text(encoding="utf-8")))
+    missing = [k for k in used if f"'{k}'" not in out]
+    assert not missing, missing

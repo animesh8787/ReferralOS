@@ -6,10 +6,11 @@
 | 2 Foundation | done (compose/Docker written, NOT yet run: verified in Phase 11) |
 | 3 Profile | done |
 | 4 Contacts | done |
-| 5 Scoring core | next |
-| 6-12 | pending |
+| 5 Scoring core | done |
+| 6 Jobs | next |
+| 7-12 | pending |
 
-Tests: backend 102 passing (`cd backend && uv run pytest -p no:warnings`).
+Tests: backend 140 passing (`cd backend && uv run pytest -p no:warnings`).
 Phase 3 covers: PDF/DOCX parsing (single/two-column/table/image-only/corrupt), span-traceable extraction, skill evidence levels,
 conflict/duplicate/date-order flags, profile versions, completeness + questions, GitHub + portfolio import against fakes
 (404, rate limit, fork, tutorial flag, robots, SSRF), polite fetcher, consents, isolation walker over all id routes.
@@ -27,3 +28,13 @@ Measured (SQLite, this machine, 1 worker, synthetic data): 11,000 LinkedIn rows 
 (~820 rows/s); search+page query over ~16k contacts 294ms. Not yet measured on Postgres.
 Known gaps: MX check path only unit-tested via injected resolver; role/seniority classifiers arrive in Phase 5; 'Connected On'
 parser tries a fixed list of formats (ambiguous dd/mm vs mm/dd is read as mm/dd).
+
+Phase 5 covers: role/seniority/domain classifier, General Referral Priority Score (6 weighted components, configurable weights
+normalised to 100, neutral|exclude missing-data policy) with a SEPARATE confidence score (completeness/source/freshness/
+consistency/verified-vs-inferred), tiers 100/400/500 with deterministic tie-breakers and no duplicates, stored config snapshot +
+inputs so every score is reproducible (tested), company intelligence endpoint, CSV (formula-injection-safe) and Excel exports,
+Prospects + Companies UI (build only, not browser-tested).
+Measured (SQLite, synthetic): scoring 11,000 contacts 9.4s (~1,170/s); prospects page query (filtered, offset 4,900) 842ms;
+xlsx export of 11,000 rows 7.9s; LinkedIn import 11,000 rows 17.4s including the automatic scoring follow-up.
+Known gaps: employment status is inferred from connection age only (never verified); hiring relevance has no open-role input until
+Phase 6; role keyword rules are English-only and untested on real titles.

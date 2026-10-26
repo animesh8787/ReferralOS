@@ -56,10 +56,25 @@ def enqueue(db, kind: str, payload: dict | None = None, max_attempts: int = 3) -
     db.add(t)
     db.commit()
     if get_settings().tasks_inline:
-        while run_task(t.id):  # includes retries
-            pass
+        drain(t.id)
         db.refresh(t)
     return t
+
+
+def enqueue_nowait(db, kind: str, payload: dict | None = None) -> BackgroundTask:
+    """Queue a follow-up task from inside a handler. The worker (or the inline drain) picks it up after the caller finishes."""
+    t = BackgroundTask(kind=kind, payload=payload or {})
+    db.add(t)
+    return t
+
+
+def drain(task_id: str | None = None, limit: int = 50) -> None:
+    """Inline mode only: run the given task (with retries), then any follow-ups it queued."""
+    while task_id and run_task(task_id):
+        pass
+    for _ in range(limit):
+        if not run_task():
+            break
 
 
 def requeue_stale() -> int:

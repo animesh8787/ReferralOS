@@ -9,7 +9,7 @@ from datetime import datetime
 
 from .. import storage
 from ..models.contacts import Contact, EmailContact, ImportBatch, ImportRow, SuppressionEntry
-from ..tasks import handler
+from ..tasks import enqueue_nowait, handler
 from . import csv_import
 from .companies import CompanyResolver, company_key
 from .contact_validate import check_email, check_phone, linkedin_identity
@@ -89,6 +89,8 @@ def import_contacts(ctx):
             pending = 0
     rep["reviews"] = resolver.reviews_created
     imp.report, imp.status = rep, "done"
+    if not hr:
+        enqueue_nowait(db, "score_contacts")  # follow-up: rank the new connections
     return rep
 
 
