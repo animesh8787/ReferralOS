@@ -20,6 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="flex items-center justify-between border-b px-6 py-3">
         <nav aria-label="Main" className="flex gap-4 text-sm">
           <Link href="/dashboard" className="font-semibold">ReferralOS</Link>
+          <Link href="/profile">Profile</Link>
         </nav>
         <button
           className="text-sm underline"

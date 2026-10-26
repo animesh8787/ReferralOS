@@ -44,6 +44,21 @@ class Api:
     def post(self, url, json=None, **kw):
         return self.c.post(url, json=json, headers=self._h(), **kw)
 
+    def request(self, method, url, json=None):
+        return self.c.request(method, url, json=json, headers=self._h())
+
+    def put(self, url, json=None):
+        return self.request("PUT", url, json)
+
+    def patch(self, url, json=None):
+        return self.request("PATCH", url, json)
+
+    def delete(self, url):
+        return self.request("DELETE", url)
+
+    def upload(self, data, name="resume.pdf"):
+        return self.c.post("/api/resumes", files={"file": (name, data, "application/octet-stream")}, headers=self._h())
+
 
 def last_token(tmp_path, to):
     files = sorted((tmp_path / "outbox").glob("*.json"))

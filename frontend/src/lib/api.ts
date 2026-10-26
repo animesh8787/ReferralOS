@@ -25,4 +25,15 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
   return res.json();
 }
 
+export async function upload<T = unknown>(path: string, file: File): Promise<T> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`/api${path}`, { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": csrf() }, body: fd });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, typeof d.detail === "string" ? d.detail : res.statusText);
+  }
+  return res.json();
+}
+
 export type Me = { id: string; email: string; display_name: string; role: string; email_verified: boolean };
