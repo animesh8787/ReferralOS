@@ -56,9 +56,7 @@ def test_encodings_and_delimiters(env, mk, enc, delim):
         data = b"\xff\xfe" + data if not data.startswith(b"\xff\xfe") else data
     prev, _ = do_import(a, data)
     assert report(a, prev["import_id"])["report"]["valid"] == 1
-    assert contacts(a)["items"][0]["name"] in ("José Müller", "JosÃ© MÃ¼ller") or True  # decoding best-effort for legacy encodings
-    if enc in ("utf-8",):
-        assert contacts(a)["items"][0]["name"] == "José Müller"
+    assert contacts(a)["items"][0]["name"] == "José Müller"  # accents survive every supported encoding
     assert prev["encoding"]
 
 

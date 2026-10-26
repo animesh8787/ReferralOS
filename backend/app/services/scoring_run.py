@@ -71,7 +71,8 @@ def score_contacts(ctx):
     for c in db.query(Contact).all():
         inp = contact_input(c, names.get(c.company_id), user, today)
         res = scoring.score(inp, cfg)
-        c.role_category, c.seniority, c.employment_status = inp["role_category"], inp["seniority"], res["employment_status"]
+        c.role_category, c.seniority = inp["role_category"], inp["seniority"]
+        c.employment_status = "verified" if c.employment_verified_at else res["employment_status"]  # only the user can verify
         rows.append({"id": c.id, "name_norm": c.name_norm, "connected_on": c.connected_on, "total": res["total"],
                      "confidence": res["confidence"]["score"], "excluded": res["excluded"], "res": res, "inp": inp})
     ranked = scoring.assign_tiers(rows, cfg["tiers"])

@@ -8,10 +8,11 @@
 | 4 Contacts | done |
 | 5 Scoring core | done |
 | 6 Jobs | done |
-| 7 Matching | next |
-| 8-12 | pending |
+| 7 Matching | done |
+| 8 Tailoring | next |
+| 9-12 | pending |
 
-Tests: backend 188 passing (`cd backend && uv run pytest -p no:warnings`).
+Tests: backend 224 passing (`cd backend && uv run pytest -p no:warnings`).
 Phase 3 covers: PDF/DOCX parsing (single/two-column/table/image-only/corrupt), span-traceable extraction, skill evidence levels,
 conflict/duplicate/date-order flags, profile versions, completeness + questions, GitHub + portfolio import against fakes
 (404, rate limit, fork, tutorial flag, robots, SSRF), polite fetcher, consents, isolation walker over all id routes.
@@ -51,3 +52,17 @@ fake_ats.py). They have never been run against live services; payload-shape mist
 check per ATS in Phase 11 if network access is allowed.
 Known gaps: no job-detail fetch for SmartRecruiters descriptions (list endpoint has none); location compatibility is city-string based.
 Perf numbers vary by run (SQLite, synthetic): 11k LinkedIn import 7.8-17.4s incl. auto-scoring; scoring 11k 5.2-9.4s.
+
+Phase 7 covers: deterministic JD analyser (mandatory vs preferred, skills via taxonomy synonyms, years/degree/graduation/
+sponsorship/citizenship/clearance hints; short descriptions reported, never invented), requirement matrix (5 statuses, honest
+"no evidence != lacks skill" wording, skill-specific years, related-skill partials), eligibility constraints (SATISFIED/VIOLATED/
+UNCERTAIN + review actions, profile never edited), Job Match Score (5 weighted components, configurable, shared missing-data
+policy), job-specific contact score (employment is inferred unless the USER verifies it; recommend 1-5 per job; one person fitting
+several jobs is linked via also_fits_jobs), Opportunity Priority Score with readiness groups (verified+eligible first;
+closed last) and explicit trade-off text, next-action rules, Opportunities UI (build only).
+Acceptance scenarios covered by API tests: 1 (verified job + verified contact), 3 (uncertain employment), 6 (several jobs,
+consolidated contacts), 7 (missing graduation data), plus closed-job ranking and per-user isolation.
+Bugs found by tests and fixed this phase: "be" inside prose matched as a B.E. degree; short one-paragraph postings were not split into
+sentences; legacy single-byte CSVs were mis-detected (now UTF-8 -> UTF-16 BOM -> Windows-1252 -> detector).
+Known gaps: job-specific contact scores are computed for the 40 best general-ranked contacts per company (top 10 stored);
+JD heuristics are English-only and unproven on real postings; work-authorisation matching is keyword-based.

@@ -117,11 +117,20 @@ def score(inp: dict, cfg: dict | None = None) -> dict:
         why = f"{LABEL.get(cat, 'Role')} involvement in hiring is typical." if hv is not None else "Role unknown."
     c["hiring_relevance"] = _comp(hv, why)
 
-    policy = cfg.get("missing_policy", "neutral")
-    known_w = sum(w[k] for k in COMPONENTS if c[k]["known"])
+    total = combine(c, w, cfg.get("missing_policy", "neutral"))
+    if inp["user"]["excluded_company_keys"] and ck in inp["user"]["excluded_company_keys"]:
+        total = 0.0
+
+    return {"version": SCORING_VERSION, "total": total, "components": c, "employment_status": status,
+            "excluded": bool(ck and ck in u["excluded_company_keys"]), "confidence": confidence(inp, c, w, status)}
+
+
+def combine(c: dict, w: dict, policy: str) -> float:
+    """Shared by every 0-100 score. c[k] = {"value": 0..1|None, "known": bool}; adds weight/effective_weight/points to each component
+    in place and returns the 0-100 total under the missing-data policy (neutral: unknown = half weight; exclude: renormalise)."""
+    known_w = sum(w[k] for k in c if c[k]["known"])
     total = 0.0
-    for k in COMPONENTS:
-        comp = c[k]
+    for k, comp in c.items():
         if comp["known"]:
             eff_w = w[k] if policy == "neutral" or known_w == 0 else w[k] * 100 / known_w
             pts = comp["value"] * eff_w
@@ -131,12 +140,7 @@ def score(inp: dict, cfg: dict | None = None) -> dict:
             eff_w, pts = 0.0, 0.0
         comp.update(weight=round(w[k], 3), effective_weight=round(eff_w, 3), points=round(pts, 2))
         total += pts
-    total = round(min(100.0, max(0.0, total)), 2)
-    if inp["user"]["excluded_company_keys"] and ck in inp["user"]["excluded_company_keys"]:
-        total = 0.0
-
-    return {"version": SCORING_VERSION, "total": total, "components": c, "employment_status": status,
-            "excluded": bool(ck and ck in u["excluded_company_keys"]), "confidence": confidence(inp, c, w, status)}
+    return round(min(100.0, max(0.0, total)), 2)
 
 
 def confidence(inp: dict, c: dict, w: dict, status: str) -> dict:

@@ -39,11 +39,18 @@ REQUIRED = {"linkedin": [], "hr": []}  # mapping completeness is judged per row 
 def decode(data: bytes) -> tuple[str, str, list[str]]:
     """-> (text, encoding, warnings)."""
     warnings = []
-    for enc in ("utf-8-sig",):
-        try:
-            return data.decode(enc), "utf-8", warnings
-        except UnicodeDecodeError:
-            pass
+    try:
+        return data.decode("utf-8-sig"), "utf-8", warnings
+    except UnicodeDecodeError:
+        pass
+    if data[:2] in (b"\xff\xfe", b"\xfe\xff"):  # UTF-16 with a byte-order mark: unambiguous
+        return data.decode("utf-16"), "utf-16", warnings
+    try:  # legacy single-byte exports from Western tools are almost always Windows-1252; detectors guess wrong on short files
+        text = data.decode("cp1252")
+        warnings.append("File was not UTF-8; read as Windows-1252. Check accented names look right.")
+        return text, "cp1252", warnings
+    except UnicodeDecodeError:
+        pass
     best = from_bytes(data).best()
     if best and best.encoding:
         warnings.append(f"File was not UTF-8; decoded as {best.encoding}")

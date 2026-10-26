@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from urllib.parse import urljoin
 
-from ..services.portfolio import _Text
+from ..services.portfolio import _Text, text_with_lines
 
 TOKEN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,59}$")
 ATS_TYPES = ("greenhouse", "lever", "ashby", "workable", "smartrecruiters")
@@ -49,7 +49,7 @@ def html_to_text(s: str | None) -> str:
         return ""
     p = _Text()
     p.feed(html.unescape(s) if "&lt;" in s else s)
-    return re.sub(r"\s+", " ", " ".join(p.parts)).strip()
+    return re.sub(r"[ \t]+", " ", text_with_lines(p.parts))  # one item per line: the analyser reads headings and bullets
 
 
 def check_token(token: str) -> str:

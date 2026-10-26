@@ -80,6 +80,23 @@ def add_contact(body: ContactIn, db: Session = Depends(scoped_db)):
     return _c(c, _names(db, [c.company_id]))
 
 
+class VerifyIn(BaseModel):
+    still_works_there: bool = True
+
+
+@router.post("/contacts/{contact_id}/verify-employment")
+def verify_employment(contact_id: str, body: VerifyIn, user: User = Depends(current_user), db: Session = Depends(scoped_db)):
+    """Only the user can verify this (e.g. they know the person still works there). We never infer 'verified'."""
+    from ..util import utcnow
+    c = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not c:
+        raise HTTPException(404, "Not found")
+    c.employment_verified_at = utcnow() if body.still_works_there else None
+    c.employment_status = "verified" if body.still_works_there else "unknown"
+    audit(db, user.id, "employment_verified" if body.still_works_there else "employment_unverified")
+    return {"employment_status": c.employment_status, "employment_verified_at": c.employment_verified_at}
+
+
 # ---------------------------------------------------------------- HR / email contacts
 def _supp_sets(db):
     rows = db.query(SuppressionEntry.kind, SuppressionEntry.value).all()

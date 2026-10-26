@@ -5,7 +5,7 @@ from ..adapters import ats
 from ..adapters.http import FetchError, PoliteFetcher
 from ..models.contacts import Company, Contact
 from ..models.jobs import DiscoveryRun, Job, JobSource, JobVerification, UserBoard, UserJob
-from ..tasks import handler
+from ..tasks import enqueue_nowait, handler
 from ..util import utcnow
 from . import job_verify, jobs_store
 
@@ -64,6 +64,7 @@ def run_discovery(db: Session, board_ids: list[str] | None, fetcher: PoliteFetch
     run.summary = {"boards": len(boards), "reachable": sum(e["reachable"] for e in cov), "jobs_seen": total, "new_jobs": new_jobs,
                    "contact_companies": len(in_contacts), "contact_companies_without_reachable_board": len(in_contacts - covered)}
     run.status = "done"
+    enqueue_nowait(db, "match_jobs")  # follow-up: analyse the new jobs against the profile
     return {"run_id": run.id, **run.summary}
 
 
@@ -90,4 +91,5 @@ def verify_jobs(ctx):
         ids = [j.id for j in db.query(Job).join(UserJob, UserJob.job_id == Job.id).filter(UserJob.hidden.is_(False)).all()
                if job_verify.needs_reverify(j)]
     res = verify_many(db, ids, new_fetcher())
+    enqueue_nowait(db, "match_jobs")  # a status change moves the opportunity ranking
     return {"verified": len(res), "statuses": res}

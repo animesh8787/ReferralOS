@@ -16,9 +16,9 @@ def _default() -> dict:
         "greenhouse": {"acme-test": [
             {"id": 1001, "title": "Backend Engineer", "location": {"name": "Remote - US"}, "updated_at": "2026-05-01T00:00:00Z",
              "absolute_url": "https://boards.greenhouse.io/acme-test/jobs/1001",
-             "content": "&lt;p&gt;Build APIs with Python and PostgreSQL. Requirements: 2+ years Python. Nice to have: Kubernetes.&lt;/p&gt;"},
+             "content": "&lt;p&gt;Build APIs with Python and PostgreSQL for our platform.&lt;/p&gt;&lt;h3&gt;Requirements:&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;3+ years of experience with Python&lt;/li&gt;&lt;li&gt;Experience with PostgreSQL or MySQL&lt;/li&gt;&lt;li&gt;Bachelor&#39;s degree in Computer Science or equivalent experience&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Nice to have:&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;Kubernetes experience&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;You will collaborate with cross-functional teams.&lt;/p&gt;"},
             {"id": 1002, "title": "Software Engineering Intern", "location": {"name": "San Francisco, CA"}, "updated_at": "2026-05-02T00:00:00Z",
-             "absolute_url": "https://boards.greenhouse.io/acme-test/jobs/1002", "content": "&lt;p&gt;Internship for students graduating in 2027.&lt;/p&gt;"}]},
+             "absolute_url": "https://boards.greenhouse.io/acme-test/jobs/1002", "content": "&lt;p&gt;Summer internship on our backend team.&lt;/p&gt;&lt;h3&gt;Requirements:&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;Currently pursuing a Bachelor&#39;s degree, graduating in 2027&lt;/li&gt;&lt;li&gt;Experience with Python or Java&lt;/li&gt;&lt;li&gt;Strong data structures and algorithms fundamentals&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;We do not offer visa sponsorship for this role.&lt;/p&gt;"}]},
         "lever": {"globex-test": [
             {"id": "lv-1", "text": "Platform Engineer", "categories": {"location": "Austin, TX", "commitment": "Full-time"}, "workplaceType": "hybrid",
              "descriptionPlain": "Run Kubernetes clusters on AWS.", "hostedUrl": "https://jobs.lever.co/globex-test/lv-1",
