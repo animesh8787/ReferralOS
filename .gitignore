@@ -1,0 +1,17 @@
+data/
+.env
+.env.*
+!.env.example
+uploads/
+outbox/
+synthetic_out/
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+.next/
+playwright-report/
+test-results/
+.pytest_cache/
