@@ -27,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/companies">Companies</Link>
           <Link href="/jobs">Jobs</Link>
           <Link href="/opportunities">Opportunities</Link>
+          <Link href="/resumes">Resumes</Link>
           <Link href="/suppression">Do-not-contact</Link>
         </nav>
         <button

@@ -33,5 +33,22 @@ def get(user_id: str, category: str, file_id: str, ext: str = "") -> bytes:
     return path_for(user_id, category, file_id, ext).read_bytes()
 
 
+BUNDLE_FILES = {"resume.pdf", "resume.docx", "resume.txt", "requirement_matrix.json", "validation_report.json", "tailoring_summary.md", "diff.json"}
+
+
+def bundle_path(user_id: str, version_id: str, name: str) -> Path:
+    """generated/<version id>/<fixed file name>: one directory per tailored version, names from a whitelist."""
+    if not _ID.match(version_id) or name not in BUNDLE_FILES:
+        raise ValueError("bad bundle key")
+    return user_dir(user_id) / "generated" / version_id / name
+
+
+def put_bundle(user_id: str, version_id: str, name: str, data: bytes) -> Path:
+    p = bundle_path(user_id, version_id, name)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_bytes(data)
+    return p
+
+
 def delete_user(user_id: str) -> None:
     shutil.rmtree(user_dir(user_id), ignore_errors=True)

@@ -9,10 +9,11 @@
 | 5 Scoring core | done |
 | 6 Jobs | done |
 | 7 Matching | done |
-| 8 Tailoring | next |
-| 9-12 | pending |
+| 8 Tailoring | done |
+| 9 Outreach | next |
+| 10-12 | pending |
 
-Tests: backend 224 passing (`cd backend && uv run pytest -p no:warnings`).
+Tests: backend 257 passing (`cd backend && uv run pytest -p no:warnings`).
 Phase 3 covers: PDF/DOCX parsing (single/two-column/table/image-only/corrupt), span-traceable extraction, skill evidence levels,
 conflict/duplicate/date-order flags, profile versions, completeness + questions, GitHub + portfolio import against fakes
 (404, rate limit, fork, tutorial flag, robots, SSRF), polite fetcher, consents, isolation walker over all id routes.
@@ -66,3 +67,15 @@ Bugs found by tests and fixed this phase: "be" inside prose matched as a B.E. de
 sentences; legacy single-byte CSVs were mis-detected (now UTF-8 -> UTF-16 BOM -> Windows-1252 -> detector).
 Known gaps: job-specific contact scores are computed for the 40 best general-ranked contacts per company (top 10 stored);
 JD heuristics are English-only and unproven on real postings; work-authorisation matching is keyword-based.
+
+Phase 8 covers: tailoring engine that only SELECTS/ORDERS/GROUPS existing profile facts (bullets verbatim; skills only from
+active profile entries; education/dates copied exactly; conflicted entries left out and reported; suggestions never used),
+claim ledger (every text node has a claim id -> supporting fact ids) with a single validator that also checks user edits and LLM
+rewrites (no new technologies/numbers/names), missing metrics become questions not numbers, Resume Match Score (internal estimate,
+labelled as not an ATS score) with only-if-true improvement hints, PDF/DOCX/TXT rendered from one document model with a post-render
+check (reopen files, selectable text, hyperlinks survive, no tables), 7-file bundle per version (+zip), version history, approve
+(blocked while claims need confirmation or render check fails), approved versions immutable (edits/regeneration create new versions),
+explicit confirm-claim path into the master (new profile version), compare, workspace UI (build only, not browser-tested).
+Acceptance 13 and 14 covered by API tests.
+Known gaps: no spell/grammar checker (text is verbatim user text or fixed templates); no hosted LLM client (interface + validation
+only; NoLLM default); PDF fonts are Latin-1 only (other scripts become '?'); role-type layouts are heuristic.

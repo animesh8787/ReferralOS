@@ -50,7 +50,9 @@ def test_every_id_route_is_isolated(env, mk):
     a.post("/api/boards", {"company": "Acme Test Co", "ats": "greenhouse", "token": "acme-test"})
     a.post("/api/jobs/discover", {})
     job_id, board_id = a.get("/api/jobs").json()["items"][0]["id"], a.get("/api/boards").json()[0]["id"]
-    known = {"job_id": job_id, "board_id": board_id, "task_id": up["task_id"], "resume_id": up["resume_id"], "item_id": item, "version_id": version,
+    t1 = a.post("/api/tailoring", {"job_id": job_id}).json()
+    t2 = a.post("/api/tailoring", {"job_id": job_id}).json()
+    known = {"name": "resume.pdf", "tailored_id": t1["id"], "other_id": t2["id"], "job_id": job_id, "board_id": board_id, "task_id": up["task_id"], "resume_id": up["resume_id"], "item_id": item, "version_id": version,
              "import_id": pending, "contact_id": contact, "review_id": review, "entry_id": supp,
              "company_id": a.get("/api/companies").json()["items"][0]["id"]}
     walked = []
@@ -69,7 +71,7 @@ def test_every_id_route_is_isolated(env, mk):
             assert resp.status_code in (404, 405, 422), f"{m} {url} as other user -> {resp.status_code}"
             walked.append((m, r.path))
         assert a.get(url).status_code in (200, 405) if "GET" in r.methods else True
-    assert len(walked) >= 20  # tasks, resumes, profile items/versions, imports, contacts, reviews, suppression
+    assert len(walked) >= 30  # tasks, resumes, profile items/versions, imports, contacts, reviews, suppression
     # B's attempts (including DELETE/PATCH) must not have damaged A's data
     assert a.get("/api/profile").json()["items"]["experience"][0]["id"] == item
 

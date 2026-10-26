@@ -12,6 +12,7 @@ from ..models.profile import ProfileVersion
 from ..security import current_user, scoped_db
 from ..services import contact_job, matching, opportunity, referral_route
 from ..services.matching_run import get_config
+from ..services.tailoring.service import resume_status
 from .contacts import page_args
 
 router = APIRouter(prefix="/api", tags=["matching"])
@@ -84,7 +85,7 @@ def _card(db: Session, m: UserJobMatch, j: Job, names: dict, detail: bool = Fals
            "score_only_rank": m.score_only_rank, "trade_off": m.trade_off, "prioritize_applying": m.match_extra["prioritize_applying"],
            "why_pursue": why or ["No strong alignment found yet; check the requirement matrix."], "eligibility": m.eligibility,
            "eligibility_summary": m.match_extra["eligibility_summary"], "referral_route": route.status if route else "UNKNOWN",
-           "best_contacts": rec, "contact_first": rec[0] if rec else None, "message": {"status": "not_drafted"}, "resume": {"status": "not_tailored"},
+           "best_contacts": rec, "contact_first": rec[0] if rec else None, "message": {"status": "not_drafted"}, "resume": resume_status(db, j.id),
            "next_action": m.next_action, "stale": latest is not None and m.profile_version != latest.version, "computed_at": m.computed_at}
     if detail:
         out |= {"analysis": m.analysis, "matrix": m.matrix, "match_components": m.match_components, "match_extra": m.match_extra,

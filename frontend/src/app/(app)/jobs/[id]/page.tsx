@@ -1,5 +1,6 @@
 "use client";
-import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
 import StatusBadge from "@/components/StatusBadge";
@@ -18,6 +19,7 @@ const ROUTE: Record<string, string> = {
 
 export default function JobDetail() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { data, error, mutate } = useSWR<Detail>(`/jobs/${id}`, (p: string) => api<Detail>(p));
   const [url, setUrl] = useState("");
   const [msg, setMsg] = useState("");
@@ -27,7 +29,11 @@ export default function JobDetail() {
     <div className="mx-auto grid max-w-4xl gap-5">
       <header><h1 className="text-xl font-semibold">{data.title}</h1><p>{data.company} · {data.location ?? "location not stated"}</p>
         <p className="mt-1 flex items-center gap-2"><StatusBadge status={data.status} />{data.needs_reverify && <span className="text-sm text-amber-800">Evidence is older than 3 days; re-verify before using.</span>}</p>
-        <button className="mt-2 rounded border px-3 py-1 text-sm" onClick={async () => { await api(`/jobs/${id}/verify`, { body: {} }); mutate(); }}>Verify again</button></header>
+        <div className="mt-2 flex gap-2">
+          <button className="rounded border px-3 py-1 text-sm" onClick={async () => { await api(`/jobs/${id}/verify`, { body: {} }); mutate(); }}>Verify again</button>
+          <button disabled={data.status === "CLOSED"} className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-40" onClick={async () => { try { const r = await api<{ id: string }>("/tailoring", { body: { job_id: id } }); router.push(`/resumes/${r.id}`); } catch (e) { setMsg((e as Error).message); } }}>Tailor my resume</button>
+          <Link className="rounded border px-3 py-1 text-sm" href={`/opportunities/${id}`}>See match analysis</Link>
+        </div></header>
 
       <section aria-labelledby="why"><h2 id="why" className="font-medium">Why this status</h2>
         <ul className="list-disc pl-5 text-sm">{data.status_reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>

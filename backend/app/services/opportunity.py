@@ -92,6 +92,8 @@ def next_action(status: str, elig_rows: list[dict], has_contacts: bool, resume_s
         return "Verify the job is still open (or check the posting yourself)."
     if resume_status == "not_started":
         return "Tailor your resume for this role."
+    if resume_status == "draft":
+        return "Review and approve your tailored resume."
     if has_contacts and draft_status == "not_started":
         return "Review the recommended contacts and draft outreach."
     return "Apply through the official link." if not has_contacts else "Review and approve the outreach drafts."

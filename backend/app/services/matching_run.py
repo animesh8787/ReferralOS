@@ -14,6 +14,7 @@ from ..models.core import UserSetting
 from ..models.jobs import Job, UserJob
 from ..models.matching import JobContactScore, UserJobMatch
 from ..models.profile import ProfileItem, ProfileVersion
+from ..models.tailoring import TailoredResume
 from ..models.scoring import ContactScore
 from ..tasks import handler
 from ..util import utcnow
@@ -59,6 +60,9 @@ def run_matching(db: Session, job_ids: list[str] | None = None, today: date | No
     existing = {m.job_id: m for m in db.query(UserJobMatch).all()}
     cands: dict[str, list] = {}
     hr_count = dict(db.query(EmailContact.company_id, func.count()).filter(EmailContact.email_valid.is_(True)).group_by(EmailContact.company_id).all())
+    rstat: dict[str, str] = {}
+    for jid, st in db.query(TailoredResume.job_id, TailoredResume.status).all():
+        rstat[jid] = "approved" if st == "approved" or rstat.get(jid) == "approved" else "draft"
     by_job_rows: dict[str, list[dict]] = {}
     rows_for_rank = []
     for job in jobs:
@@ -101,7 +105,7 @@ def run_matching(db: Session, job_ids: list[str] | None = None, today: date | No
         m.match_total, m.match_components = ms["total"], ms["components"]
         m.match_extra = {k: ms[k] for k in ("prioritize_applying", "aligned_skills", "missing_qualifications", "to_verify", "eligibility_summary")}
         m.priority_total, m.priority_components, m.readiness_group = pr["total"], pr["components"], pr["group"]
-        m.next_action = opportunity.next_action(job.status, elig, best is not None)
+        m.next_action = opportunity.next_action(job.status, elig, best is not None, rstat.get(job.id, "not_started"))
         m.profile_version, m.config_snapshot, m.computed_at = (last_v.version if last_v else 0), cfg, now
     # contacts: replace this run's rows, then link one person across several jobs at a company
     if jobs:
