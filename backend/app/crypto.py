@@ -67,7 +67,12 @@ def install_log_redaction() -> None:
     def factory(*args, **kwargs):
         rec = base(*args, **kwargs)
         try:
-            rec.msg, rec.args = redact(rec.getMessage()), ()
+            # keep msg/args structure (uvicorn's access formatter unpacks 5 args); redact each string in place
+            rec.msg = redact(rec.msg) if isinstance(rec.msg, str) else rec.msg
+            if isinstance(rec.args, tuple):
+                rec.args = tuple(redact(a) if isinstance(a, str) else a for a in rec.args)
+            elif isinstance(rec.args, dict):
+                rec.args = {k: redact(v) if isinstance(v, str) else v for k, v in rec.args.items()}
         except Exception:  # noqa: BLE001  a logging problem must never break a request
             pass
         return rec
