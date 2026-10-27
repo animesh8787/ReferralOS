@@ -26,7 +26,7 @@ export default function ConsentCheckbox({ name, extra, onChange }: { name: strin
         />
         <span>{data?.[name]?.description ?? name}{extra && ` ${extra}`}</span>
       </label>
-      {err && <p role="alert" className="text-xs text-red-700">{err}</p>}
+      {err && <p role="alert" className="text-xs text-danger">{err}</p>}
     </div>
   );
 }

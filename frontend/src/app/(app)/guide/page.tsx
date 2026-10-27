@@ -14,11 +14,11 @@ const ITEMS: [string, string, string, string][] = [
 
 export default function Guide() {
   return (
-    <div className="mx-auto grid max-w-3xl gap-4 text-sm">
-      <h1 className="text-xl font-semibold">How ReferralOS works</h1>
+    <div className="grid max-w-3xl gap-4 text-sm">
+      <h1>How ReferralOS works</h1>
       <p>Start from a real opening, find the few people who could help, tailor an honest resume, and reach out with your approval at every step. Where something can&apos;t be known, we say &ldquo;unknown&rdquo; rather than guess.</p>
-      <ol className="grid gap-3">{ITEMS.map(([t, h, d, r]) => <li key={t} className="rounded border p-3"><h2 className="font-medium"><Link className="underline" href={h}>{t}</Link></h2><p>{d}</p><p className="text-xs text-gray-600">{r}</p></li>)}</ol>
-      <section aria-labelledby="rules" className="rounded border border-amber-300 bg-amber-50 p-3"><h2 id="rules" className="font-medium">Things this app will not do</h2>
+      <ol className="grid gap-3">{ITEMS.map(([t, h, d, r]) => <li key={t} className="rounded border p-3"><h2 className="font-medium"><Link className="underline" href={h}>{t}</Link></h2><p>{d}</p><p className="text-xs text-muted">{r}</p></li>)}</ol>
+      <section aria-labelledby="rules" className="rounded border border-warn bg-warn-weak p-3"><h2 id="rules" className="font-medium">Things this app will not do</h2>
         <ul className="list-disc pl-5"><li>Send any LinkedIn message for you, or ask for your LinkedIn or Gmail password.</li><li>Send anything you haven&apos;t approved, to someone on your do-not-contact list, or about a job that may be closed.</li>
           <li>Email the same person a second cold email, or send in bulk from purchased lists.</li><li>Call or text anyone. Phone numbers are for your reference only.</li><li>Invent skills, numbers, relationships or referral programmes.</li></ul></section>
       <section aria-labelledby="ext"><h2 id="ext" className="font-medium">What needs outside services</h2>

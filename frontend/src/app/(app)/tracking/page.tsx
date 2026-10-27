@@ -21,16 +21,16 @@ export default function Tracking() {
     try { await api(`/tracking/pairs/${id}`, { method: "PATCH", body: { status: st, evidence } }); setMsg("Updated."); mutate(); } catch (e) { setMsg((e as Error).message); }
   }
   return (
-    <div className="mx-auto grid max-w-6xl gap-4">
-      <header><h1 className="text-xl font-semibold">Tracking</h1><p className="text-sm text-gray-600">Every outreach from draft to outcome. “Sent” only appears after a real send or after you confirm you sent it. “Referral submitted” needs your evidence.</p></header>
+    <div className="grid gap-4">
+      <header><h1>Tracking</h1><p className="text-sm text-muted">Every outreach from draft to outcome. “Sent” only appears after a real send or after you confirm you sent it. “Referral submitted” needs your evidence.</p></header>
       {msg && <p role="status" className="text-sm">{msg}</p>}
       <div className="flex flex-wrap gap-2" role="group" aria-label="Pipeline stages">
-        <button className={`rounded border px-2 py-1 text-xs ${status === "" ? "bg-black text-white" : ""}`} onClick={() => { setStatus(""); setPage(1); }}>All</button>
-        {ORDER.filter((s) => data?.counts[s]).map((s) => <button key={s} className={`rounded border px-2 py-1 text-xs ${status === s ? "bg-black text-white" : ""}`} onClick={() => { setStatus(s); setPage(1); }}>{s.replaceAll("_", " ").toLowerCase()} ({data?.counts[s]})</button>)}</div>
-      {data?.items.length === 0 && <p className="text-sm text-gray-600">Nothing here yet.</p>}
+        <button className={`rounded border px-2 py-1 text-xs ${status === "" ? "bg-black" : ""}`} onClick={() => { setStatus(""); setPage(1); }}>All</button>
+        {ORDER.filter((s) => data?.counts[s]).map((s) => <button key={s} className={`rounded border px-2 py-1 text-xs ${status === s ? "bg-black" : ""}`} onClick={() => { setStatus(s); setPage(1); }}>{s.replaceAll("_", " ").toLowerCase()} ({data?.counts[s]})</button>)}</div>
+      {data?.items.length === 0 && <p className="text-sm text-muted">Nothing here yet.</p>}
       {data && data.items.length > 0 && <>
         <div className="overflow-auto"><table className="min-w-full border text-sm"><caption className="sr-only">Outreach pipeline</caption>
-          <thead><tr className="bg-gray-50 text-left">{["Who", "Job", "Channel", "Status", "Last message", "Follow-up due", "Update"].map((h) => <th key={h} className="border px-2 py-1">{h}</th>)}</tr></thead>
+          <thead><tr className="bg-surface-2 text-left">{["Who", "Job", "Channel", "Status", "Last message", "Follow-up due", "Update"].map((h) => <th key={h} className="border px-2 py-1">{h}</th>)}</tr></thead>
           <tbody>{data.items.map((p) => <tr key={p.id}><td className="border px-2 py-1">{p.who}</td><td className="border px-2 py-1">{p.job_title ?? "—"}</td><td className="border px-2 py-1">{p.channel}</td>
             <td className="border px-2 py-1">{p.status.replaceAll("_", " ").toLowerCase()}</td><td className="border px-2 py-1">{p.last_message ? `${p.last_message.kind.replace("_", " ")}: ${p.last_message.send_state.replace("_", " ")}` : "—"}</td>
             <td className="border px-2 py-1">{p.follow_up_at ? new Date(p.follow_up_at + "Z").toLocaleDateString() : "—"}</td>

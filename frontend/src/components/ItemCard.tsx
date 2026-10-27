@@ -33,10 +33,10 @@ export default function ItemCard({ item, onChange }: { item: Item; onChange: () 
         <div className="flex shrink-0 gap-2 text-sm">
           {!item.verified && <button className="underline" onClick={() => run(() => api(`/profile/items/${item.id}/confirm`, { method: "POST", body: {} }))}>Confirm</button>}
           <button className="underline" onClick={() => setEditing(!editing)}>{editing ? "Cancel" : "Edit"}</button>
-          <button className="text-red-700 underline" onClick={() => run(() => api(`/profile/items/${item.id}`, { method: "DELETE" }))}>Delete</button>
+          <button className="text-danger underline" onClick={() => run(() => api(`/profile/items/${item.id}`, { method: "DELETE" }))}>Delete</button>
         </div>
       </div>
-      {item.flags.map((f, i) => <p key={i} className="mt-1 text-sm text-red-800">{f.note}</p>)}
+      {item.flags.map((f, i) => <p key={i} className="mt-1 text-sm text-danger">{f.note}</p>)}
       {!editing && Array.isArray(item.data.bullets) && (
         <ul className="mt-2 list-disc pl-5 text-sm">{(item.data.bullets as string[]).map((b, i) => <li key={i}>{b}</li>)}</ul>
       )}
@@ -44,7 +44,7 @@ export default function ItemCard({ item, onChange }: { item: Item; onChange: () 
         <form className="mt-3 grid gap-2 text-sm" onSubmit={(e) => { e.preventDefault(); run(async () => { await api(`/profile/items/${item.id}`, { method: "PATCH", body: { data: draft } }); setEditing(false); }); }}>
           {Object.entries(draft).filter(([, v]) => typeof v === "string" || v === null || Array.isArray(v)).map(([k, v]) => (
             <label key={k} className="grid gap-1">
-              <span className="text-gray-600">{k}{Array.isArray(v) ? " (one per line)" : ""}</span>
+              <span className="text-muted">{k}{Array.isArray(v) ? " (one per line)" : ""}</span>
               {Array.isArray(v) ? (
                 <textarea className="rounded border px-2 py-1" rows={3} value={(v as string[]).join("\n")} onChange={(e) => setDraft({ ...draft, [k]: e.target.value.split("\n").filter(Boolean) })} />
               ) : (
@@ -52,11 +52,11 @@ export default function ItemCard({ item, onChange }: { item: Item; onChange: () 
               )}
             </label>
           ))}
-          <p className="text-xs text-gray-600">Saving marks this as confirmed by you and creates a new profile version.</p>
+          <p className="text-xs text-muted">Saving marks this as confirmed by you and creates a new profile version.</p>
           <button className="w-fit rounded bg-black px-3 py-1 text-white">Save</button>
         </form>
       )}
-      {err && <p role="alert" className="mt-2 text-sm text-red-700">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-sm text-danger">{err}</p>}
     </li>
   );
 }

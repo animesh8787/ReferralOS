@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import Skeleton from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 
 function Inner() {
@@ -19,16 +20,16 @@ function Inner() {
       .catch((e) => { setState("error"); setMsg((e as Error).message); });
   }, [q]);
   return (
-    <div className="mx-auto grid max-w-xl gap-3 text-sm">
-      <h1 className="text-xl font-semibold">Connecting Gmail</h1>
+    <div className="grid max-w-xl gap-3 text-sm">
+      <h1>Connecting Gmail</h1>
       {state === "working" && <p role="status">Finishing the connection with Google…</p>}
-      {state === "ok" && <p role="status" className="text-green-800">{msg} You can approve and send emails from your account now; nothing is sent without your approval.</p>}
-      {state === "error" && <p role="alert" className="text-red-700">{msg} Nothing was saved.</p>}
+      {state === "ok" && <p role="status" className="text-ok">{msg} You can approve and send emails from your account now; nothing is sent without your approval.</p>}
+      {state === "error" && <p role="alert" className="text-danger">{msg} Nothing was saved.</p>}
       <p><Link className="underline" href="/outreach/settings">Back to outreach settings</Link></p>
     </div>
   );
 }
 
 export default function GmailCallback() {
-  return <Suspense fallback={<p role="status">Loading…</p>}><Inner /></Suspense>;
+  return <Suspense fallback={<Skeleton rows={5} />}><Inner /></Suspense>;
 }

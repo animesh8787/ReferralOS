@@ -50,10 +50,10 @@ export default function ImportsPage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6">
+    <div className="grid gap-6">
       <header>
-        <h1 className="text-xl font-semibold">Imports & data quality</h1>
-        <p className="text-sm text-gray-600">Contacts you import are other people&apos;s data. Use them lawfully and honour opt-outs. Nothing is discarded silently: every row is kept with its status and reason.</p>
+        <h1>Imports & data quality</h1>
+        <p className="text-sm text-muted">Contacts you import are other people&apos;s data. Use them lawfully and honour opt-outs. Nothing is discarded silently: every row is kept with its status and reason.</p>
       </header>
 
       <section aria-labelledby="up" className="grid gap-3 rounded border p-4">
@@ -63,13 +63,13 @@ export default function ImportsPage() {
           <label><input type="radio" checked={kind === "hr"} onChange={() => { setKind("hr"); setPrev(null); }} /> HR / recruiter contacts</label>
         </fieldset>
         <label className="grid gap-1 text-sm">CSV file (up to 25 MB)<input type="file" accept=".csv,text/csv" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} /></label>
-        {err && <p role="alert" className="text-sm text-red-700">{err}</p>}
+        {err && <p role="alert" className="text-sm text-danger">{err}</p>}
         {note && <p role="status" className="text-sm">{note}</p>}
 
         {prev && (
           <div className="grid gap-3 text-sm">
             <p>Detected: {prev.encoding}, delimiter “{prev.delimiter === "\t" ? "tab" : prev.delimiter}”, header on line {prev.header_row + 1}, {prev.total_rows.toLocaleString()} rows.</p>
-            {prev.warnings.map((w, i) => <p key={i} className="text-amber-800">{w}</p>)}
+            {prev.warnings.map((w, i) => <p key={i} className="text-warn">{w}</p>)}
             <div className="grid gap-2 sm:grid-cols-2">
               {Object.keys(prev.mapping).map((f) => (
                 <label key={f} className="grid gap-1">{f.replaceAll("_", " ")}
@@ -79,9 +79,9 @@ export default function ImportsPage() {
                   </select></label>
               ))}
             </div>
-            {prev.unmapped.length > 0 && <p className="text-gray-600">Unused columns: {prev.unmapped.join(", ")}</p>}
+            {prev.unmapped.length > 0 && <p className="text-muted">Unused columns: {prev.unmapped.join(", ")}</p>}
             <div className="overflow-auto"><table className="min-w-full border text-xs"><caption className="sr-only">Preview of the first rows</caption>
-              <thead><tr>{prev.headers.map((h, i) => <th key={i} className="border bg-gray-50 px-2 py-1 text-left">{h}</th>)}</tr></thead>
+              <thead><tr>{prev.headers.map((h, i) => <th key={i} className="border bg-surface-2 px-2 py-1 text-left">{h}</th>)}</tr></thead>
               <tbody>{prev.preview.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className="border px-2 py-1">{c}</td>)}</tr>)}</tbody></table></div>
             {kind === "hr" && prev.provenance_options && (
               <>
@@ -90,9 +90,9 @@ export default function ImportsPage() {
                     <option value="">Choose…</option>
                     {Object.entries(prev.provenance_options).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select></label>
-                {prov === "purchased" && <p role="alert" className="rounded bg-amber-100 p-2">Purchased or scraped lists often lack consent. Bulk sending is blocked for these contacts; you can only send one-off manual drafts. This is guidance, not legal advice.</p>}
+                {prov === "purchased" && <p role="alert" className="rounded bg-warn-weak p-2">Purchased or scraped lists often lack consent. Bulk sending is blocked for these contacts; you can only send one-off manual drafts. This is guidance, not legal advice.</p>}
                 <label className="grid gap-1">Phone region (for numbers without a country code)<input className="w-20 rounded border px-2 py-1" maxLength={2} value={region} onChange={(e) => setRegion(e.target.value.toUpperCase())} /></label>
-                <p className="text-xs text-gray-600">Phone numbers are stored for your manual reference only. This app never calls or texts anyone; local telemarketing rules still apply.</p>
+                <p className="text-xs text-muted">Phone numbers are stored for your manual reference only. This app never calls or texts anyone; local telemarketing rules still apply.</p>
               </>
             )}
             <button className="w-fit rounded bg-black px-3 py-1.5 text-white disabled:opacity-50" disabled={kind === "hr" && !prov} onClick={start}>Start import</button>
@@ -102,13 +102,13 @@ export default function ImportsPage() {
 
       <section aria-labelledby="hist">
         <h2 id="hist" className="mb-2 font-medium">Import history</h2>
-        {list.data?.length === 0 && <p className="text-sm text-gray-600">No imports yet.</p>}
+        {list.data?.length === 0 && <p className="text-sm text-muted">No imports yet.</p>}
         <ul className="grid gap-2">
           {list.data?.map((b) => {
             const r = b.report as Record<string, number & Record<string, number>>;
             return (
               <li key={b.id} className="rounded border p-3 text-sm">
-                <p className="font-medium">{b.filename} <span className="font-normal text-gray-600">({b.kind}{b.provenance ? `, ${b.provenance.replaceAll("_", " ")}` : ""})</span> · {b.status}</p>
+                <p className="font-medium">{b.filename} <span className="font-normal text-muted">({b.kind}{b.provenance ? `, ${b.provenance.replaceAll("_", " ")}` : ""})</span> · {b.status}</p>
                 {r.read !== undefined && <p>Read {r.read} · valid {r.valid} · duplicates {r.duplicate} · invalid {r.invalid}{r.suppressed ? ` · suppressed ${r.suppressed}` : ""}{r.reviews ? ` · ${r.reviews} company matches to review` : ""}</p>}
                 <button className="mt-1 underline" onClick={() => { setRowsFor(b.id); setPage(1); }}>Inspect rows</button>
               </li>
@@ -124,8 +124,8 @@ export default function ImportsPage() {
             {["invalid", "duplicate", "valid"].map((s) => <option key={s}>{s}</option>)}</select></label>
           {rows.data && (
             <>
-              <table className="min-w-full border text-xs"><thead><tr className="bg-gray-50"><th className="border px-2 py-1 text-left">Line</th><th className="border px-2 py-1 text-left">Why</th><th className="border px-2 py-1 text-left">Original values</th></tr></thead>
-                <tbody>{rows.data.rows.map((r) => <tr key={r.row}><td className="border px-2 py-1">{r.row}</td><td className="border px-2 py-1">{r.reasons.map((x) => x.note).join("; ") || "—"}</td><td className="border px-2 py-1">{Object.values(r.raw).join(" | ")}</td></tr>)}</tbody></table>
+              <div className="overflow-auto"><table className="min-w-full border text-xs"><thead><tr className="bg-surface-2"><th className="border px-2 py-1 text-left">Line</th><th className="border px-2 py-1 text-left">Why</th><th className="border px-2 py-1 text-left">Original values</th></tr></thead>
+                <tbody>{rows.data.rows.map((r) => <tr key={r.row}><td className="border px-2 py-1">{r.row}</td><td className="border px-2 py-1">{r.reasons.map((x) => x.note).join("; ") || "—"}</td><td className="border px-2 py-1">{Object.values(r.raw).join(" | ")}</td></tr>)}</tbody></table></div>
               <Pager page={page} pageSize={25} total={rows.data.total} onPage={setPage} />
             </>
           )}

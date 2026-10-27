@@ -29,14 +29,15 @@ function Inner({ mode }: { mode: Mode }) {
     } catch (x) { setErr((x as Error).message); }
   }
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
-      <h1 className="text-2xl font-semibold">{c.title}</h1>
-      <form onSubmit={submit} className="flex flex-col gap-3">
-        {mode !== "forgot" && <label className="flex flex-col gap-1 text-sm">Token from your email<input className="rounded border px-3 py-2" required value={token} onChange={(e) => setToken(e.target.value)} /></label>}
-        {mode === "forgot" && <label className="flex flex-col gap-1 text-sm">Email<input type="email" className="rounded border px-3 py-2" required value={value} onChange={(e) => setValue(e.target.value)} /></label>}
-        {mode === "reset" && <label className="flex flex-col gap-1 text-sm">New password<input type="password" minLength={10} className="rounded border px-3 py-2" required autoComplete="new-password" value={value} onChange={(e) => setValue(e.target.value)} /><span className="text-xs text-gray-500">At least 10 characters with a letter and a digit.</span></label>}
-        {err && <p role="alert" className="text-sm text-red-700">{err}</p>}{msg && <p role="status" className="text-sm text-green-800">{msg}</p>}
-        <button className="rounded bg-black px-3 py-2 text-white">{c.button}</button>
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4 view-enter">
+      <Link href="/" className="brand !p-0">Referral<em>OS</em></Link>
+      <h1>{c.title}</h1>
+      <form onSubmit={submit} className="card flex flex-col gap-3 p-5">
+        {mode !== "forgot" && <label className="flex flex-col gap-1 text-sm font-medium">Token from your email<input  required value={token} onChange={(e) => setToken(e.target.value)} /></label>}
+        {mode === "forgot" && <label className="flex flex-col gap-1 text-sm font-medium">Email<input type="email"  required value={value} onChange={(e) => setValue(e.target.value)} /></label>}
+        {mode === "reset" && <label className="flex flex-col gap-1 text-sm font-medium">New password<input type="password" minLength={10}  required autoComplete="new-password" value={value} onChange={(e) => setValue(e.target.value)} /><span className="text-xs text-muted">At least 10 characters with a letter and a digit.</span></label>}
+        {err && <p role="alert" className="notice notice-err">{err}</p>}{msg && <p role="status" className="notice notice-ok">{msg}</p>}
+        <button className="rounded bg-black px-3 py-2 text-white w-full">{c.button}</button>
       </form>
       <p className="text-sm"><Link className="underline" href="/login">Back to sign in</Link></p>
     </main>

@@ -14,7 +14,7 @@ export default function PreferencesForm({ onSaved }: { onSaved?: () => void }) {
   const [msg, setMsg] = useState("");
   useEffect(() => { const d = data?.items.preference?.[0]?.data; if (d) setP({ ...EMPTY, ...d }); }, [data]);
   const list = (k: "target_roles" | "target_companies" | "excluded_companies" | "locations", label: string, hint: string) => (
-    <label className="grid gap-1">{label}<span className="text-xs text-gray-600">{hint}</span>
+    <label className="grid gap-1">{label}<span className="text-xs text-muted">{hint}</span>
       <textarea rows={3} className="rounded border px-2 py-1" value={p[k].join("\n")} onChange={(e) => setP({ ...p, [k]: lines(e.target.value) })} /></label>);
   const check = (k: "work_arrangement" | "employment_type", opts: [string, string][]) => (
     <div className="flex flex-wrap gap-3">{opts.map(([v, l]) => <label key={v} className="flex items-center gap-1"><input type="checkbox" checked={p[k].includes(v)} onChange={(e) => setP({ ...p, [k]: e.target.checked ? [...p[k], v] : p[k].filter((x) => x !== v) })} />{l}</label>)}</div>);
@@ -27,7 +27,7 @@ export default function PreferencesForm({ onSaved }: { onSaved?: () => void }) {
       <fieldset><legend className="mb-1">Work arrangement</legend>{check("work_arrangement", [["remote", "Remote"], ["hybrid", "Hybrid"], ["onsite", "On-site"]])}</fieldset>
       <fieldset><legend className="mb-1">Employment type</legend>{check("employment_type", [["internship", "Internship"], ["full_time", "Full-time"], ["part_time", "Part-time"], ["contract", "Contract"]])}</fieldset>
       <label className="grid gap-1">Graduation date (or expected)<input type="month" className="w-48 rounded border px-2 py-1" value={p.graduation_date ?? ""} onChange={(e) => setP({ ...p, graduation_date: e.target.value || null })} /></label>
-      <label className="grid gap-1">Work authorisation (optional, private)<span className="text-xs text-gray-600">Used only to check postings that mention visas or citizenship. Leave blank if you prefer.</span>
+      <label className="grid gap-1">Work authorisation (optional, private)<span className="text-xs text-muted">Used only to check postings that mention visas or citizenship. Leave blank if you prefer.</span>
         <input className="rounded border px-2 py-1" placeholder="e.g. US citizen, or needs sponsorship" value={p.work_authorization ?? ""} onChange={(e) => setP({ ...p, work_authorization: e.target.value || null })} /></label>
       <button className="w-fit rounded bg-black px-3 py-1.5 text-white">Save</button>{msg && <p role="status">{msg}</p>}
     </form>

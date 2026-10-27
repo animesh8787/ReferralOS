@@ -32,21 +32,22 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-4">
-      <h1 className="text-2xl font-semibold">{mode === "login" ? "Sign in to ReferralOS" : "Create your account"}</h1>
-      <form onSubmit={submit} className="flex flex-col gap-4" aria-describedby={error ? "form-error" : undefined}>
-        <label className="flex flex-col gap-1 text-sm">
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4 view-enter">
+      <Link href="/" className="brand !p-0">Referral<em>OS</em></Link>
+      <h1>{mode === "login" ? "Sign in to ReferralOS" : "Create your account"}</h1>
+      <form onSubmit={submit} className="card flex flex-col gap-4 p-5" aria-describedby={error ? "form-error" : undefined}>
+        <label className="flex flex-col gap-1 text-sm font-medium">
           Email
-          <input className="rounded border px-3 py-2" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input  type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm font-medium">
           Password
-          <input className="rounded border px-3 py-2" type="password" required minLength={10} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} />
-          {mode === "signup" && <span className="text-xs text-gray-500">At least 10 characters with a letter and a digit.</span>}
+          <input  type="password" required minLength={10} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} />
+          {mode === "signup" && <span className="text-xs text-muted">At least 10 characters with a letter and a digit.</span>}
         </label>
-        {error && <p id="form-error" role="alert" className="text-sm text-red-700">{error}</p>}
-        {notice && <p role="status" className="text-sm text-green-800">{notice}</p>}
-        <button disabled={busy} className="rounded bg-black px-3 py-2 text-white disabled:opacity-50">{busy ? "Working…" : mode === "login" ? "Sign in" : "Sign up"}</button>
+        {error && <p id="form-error" role="alert" className="notice notice-err">{error}</p>}
+        {notice && <p role="status" className="notice notice-ok">{notice}</p>}
+        <button disabled={busy} className="rounded bg-black px-3 py-2 text-white disabled:opacity-50 w-full">{busy ? "Working…" : mode === "login" ? "Sign in" : "Sign up"}</button>
       </form>
       <p className="text-sm">
         {mode === "login" && <><Link className="underline" href="/forgot">Forgot your password?</Link> · </>}<Link className="underline" href="/verify">Verify your email</Link><br />

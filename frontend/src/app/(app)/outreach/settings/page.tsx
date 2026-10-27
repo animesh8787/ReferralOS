@@ -2,6 +2,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
+import Skeleton from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 
 type S = { sender_name: string; sender_email: string; delivery_mode: string; daily_limit: number; per_company_daily: number; intro_daily: number; pacing_seconds: number[]; max_followups: number;
@@ -14,7 +15,7 @@ export default function OutreachSettings() {
   const [msg, setMsg] = useState("");
   const [warn, setWarn] = useState<string[]>([]);
   const [email, setEmail] = useState("");
-  if (!s) return <p role="status">Loading…</p>;
+  if (!s) return <Skeleton rows={5} />;
   const v = <K extends keyof S>(k: K) => (f[k] ?? s[k]) as S[K];
   const pace = (i: 0 | 1, x: number) => { const cur = [...v("pacing_seconds")]; cur[i] = x; setF({ ...f, pacing_seconds: cur }); };
   async function save() {
@@ -26,10 +27,10 @@ export default function OutreachSettings() {
   const num = (k: keyof S, label: string, max?: number) => <label className="grid gap-1">{label}<input type="number" min={0} max={max} className="w-28 rounded border px-2 py-1" value={v(k) as number} onChange={(e) => setF({ ...f, [k]: Number(e.target.value) })} /></label>;
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-6 text-sm">
-      <h1 className="text-xl font-semibold">Outreach settings</h1>
+    <div className="grid max-w-3xl gap-6 text-sm">
+      <h1>Outreach settings</h1>
       <section aria-labelledby="id" className="grid gap-2"><h2 id="id" className="font-medium">Who the emails come from</h2>
-        <p className="text-gray-600">Emails are sent from your own address, with your real name. Nothing can be sent without both.</p>
+        <p className="text-muted">Emails are sent from your own address, with your real name. Nothing can be sent without both.</p>
         <label className="grid gap-1">Your name<input className="rounded border px-2 py-1" value={v("sender_name")} onChange={(e) => setF({ ...f, sender_name: e.target.value })} /></label>
         <label className="grid gap-1">Your email address<input type="email" className="rounded border px-2 py-1" value={v("sender_email")} onChange={(e) => setF({ ...f, sender_email: e.target.value })} /></label></section>
 
@@ -37,22 +38,22 @@ export default function OutreachSettings() {
         {[["MANUAL_REVIEW", "Manual (default)", "The app prepares everything; you copy or open each email and send it yourself, then mark it sent."],
           ["AUTHORISED_INTEGRATION", "Send through my Gmail", "After you approve, the app sends from your connected Gmail account with pauses between emails, within your limits."],
           ["DRY_RUN", "Dry run", "Does everything except deliver. Use it to check a whole batch safely."]].map(([k, t, d]) => (
-          <label key={k} className="flex items-start gap-2"><input type="radio" name="mode" checked={v("delivery_mode") === k} onChange={() => setF({ ...f, delivery_mode: k })} /><span><strong>{t}</strong><br /><span className="text-gray-600">{d}</span></span></label>))}</section>
+          <label key={k} className="flex items-start gap-2"><input type="radio" name="mode" checked={v("delivery_mode") === k} onChange={() => setF({ ...f, delivery_mode: k })} /><span><strong>{t}</strong><br /><span className="text-muted">{d}</span></span></label>))}</section>
 
       <section aria-labelledby="lm" className="grid gap-2"><h2 id="lm" className="font-medium">Limits</h2>
         <div className="flex flex-wrap gap-4">{num("daily_limit", `Emails per day (max ${s.hard_max_daily})`, s.hard_max_daily)}{num("per_company_daily", `Per company per day (max ${s.hard_max_per_company})`, s.hard_max_per_company)}{num("intro_daily", "Introductory emails per day")}
           {num("max_followups", "Follow-ups per person (max 3)", 3)}{num("followup_spacing_business_days", "Business days between follow-ups")}</div>
         <div className="flex flex-wrap items-end gap-3"><label className="grid gap-1">Pause between emails: at least (seconds)<input type="number" min={0} className="w-28 rounded border px-2 py-1" value={v("pacing_seconds")[0]} onChange={(e) => pace(0, Number(e.target.value))} /></label>
           <label className="grid gap-1">at most (seconds)<input type="number" min={0} className="w-28 rounded border px-2 py-1" value={v("pacing_seconds")[1]} onChange={(e) => pace(1, Number(e.target.value))} /></label>
-          <span className="text-gray-600">Each gap is picked at random in this range, so a batch is spread out. It keeps you well inside provider limits.</span></div>
-        <p className="text-gray-600">Defaults are deliberately low. Each person is only ever sent one first email. Raising limits makes spam filtering and annoyed recipients more likely.</p>
+          <span className="text-muted">Each gap is picked at random in this range, so a batch is spread out. It keeps you well inside provider limits.</span></div>
+        <p className="text-muted">Defaults are deliberately low. Each person is only ever sent one first email. Raising limits makes spam filtering and annoyed recipients more likely.</p>
         <label className="flex gap-4"><span className="grid gap-1">Tone<select className="rounded border px-2 py-1" value={v("tone")} onChange={(e) => setF({ ...f, tone: e.target.value })}><option>conversational</option><option>formal</option></select></span>
           <span className="grid gap-1">Length<select className="rounded border px-2 py-1" value={v("length")} onChange={(e) => setF({ ...f, length: e.target.value })}><option>short</option><option>medium</option></select></span></label></section>
-      <div><button className="rounded bg-black px-3 py-1.5 text-white" onClick={save}>Save settings</button>{warn.map((w, i) => <p key={i} role="status" className="mt-1 text-amber-800">{w}</p>)}{msg && <p role="status" className="mt-1">{msg}</p>}</div>
+      <div><button className="rounded bg-black px-3 py-1.5 text-white" onClick={save}>Save settings</button>{warn.map((w, i) => <p key={i} role="status" className="mt-1 text-warn">{w}</p>)}{msg && <p role="status" className="mt-1">{msg}</p>}</div>
 
       <section aria-labelledby="ack" className="grid gap-2 rounded border p-3"><h2 id="ack" className="font-medium">Lawful use</h2>
-        <p>{s.lawful_use_text}</p><p className="text-xs text-gray-600">{s.disclaimer} Countries such as the UK, EU members, Canada and Australia usually require prior consent for unsolicited commercial email; you will be asked to acknowledge each such region separately. Purchased or scraped lists cannot be used for automated sending.</p>
-        {s.lawful_use_ack ? <p className="text-green-800">Acknowledged on {s.lawful_use_ack.slice(0, 10)}.</p> : <button className="w-fit rounded border px-3 py-1" onClick={async () => { await api("/outreach/acknowledge", { body: { kind: "lawful_use" } }); mutate(); }}>I understand and agree</button>}
+        <p>{s.lawful_use_text}</p><p className="text-xs text-muted">{s.disclaimer} Countries such as the UK, EU members, Canada and Australia usually require prior consent for unsolicited commercial email; you will be asked to acknowledge each such region separately. Purchased or scraped lists cannot be used for automated sending.</p>
+        {s.lawful_use_ack ? <p className="text-ok">Acknowledged on {s.lawful_use_ack.slice(0, 10)}.</p> : <button className="w-fit rounded border px-3 py-1" onClick={async () => { await api("/outreach/acknowledge", { body: { kind: "lawful_use" } }); mutate(); }}>I understand and agree</button>}
         {Object.keys(s.region_acks).length > 0 && <p>Region acknowledgements: {Object.keys(s.region_acks).join(", ")}</p>}</section>
 
       <section aria-labelledby="gm" className="grid gap-2 rounded border p-3"><h2 id="gm" className="font-medium">Gmail connection</h2>

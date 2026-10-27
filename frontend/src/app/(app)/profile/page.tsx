@@ -5,6 +5,7 @@ import useSWR from "swr";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
 import ItemCard from "@/components/ItemCard";
 import { Item } from "@/components/ProvenanceBadge";
+import Skeleton from "@/components/ui/Skeleton";
 import { api, settle, upload } from "@/lib/api";
 
 type Profile = {
@@ -42,17 +43,17 @@ export default function ProfilePage() {
     }
   }
 
-  if (isLoading) return <p role="status">Loading profile…</p>;
-  if (error || !data) return <p role="alert" className="text-red-700">Could not load your profile. Please refresh.</p>;
+  if (isLoading) return <Skeleton rows={5} />;
+  if (error || !data) return <p role="alert" className="text-danger">Could not load your profile. Please refresh.</p>;
   const empty = Object.keys(data.items).length === 0;
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-6">
+    <div className="grid max-w-4xl gap-6">
       <header>
-        <h1 className="text-xl font-semibold">Master Career Profile</h1>
-        <p className="text-sm text-gray-600">The single source of truth for resumes and messages. Nothing is added to a resume unless it is here.</p>
+        <h1>Master Career Profile</h1>
+        <p className="text-sm text-muted">The single source of truth for resumes and messages. Nothing is added to a resume unless it is here.</p>
         <div className="mt-2" role="meter" aria-valuenow={data.completeness.score} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completeness">
-          <div className="h-2 w-full rounded bg-gray-200"><div className="h-2 rounded bg-green-600" style={{ width: `${data.completeness.score}%` }} /></div>
+          <div className="h-2 w-full rounded bg-surface-3"><div className="h-2 rounded bg-ok" style={{ width: `${data.completeness.score}%` }} /></div>
           <p className="mt-1 text-xs">{data.completeness.score}% complete{data.completeness.missing.length ? ` · missing: ${data.completeness.missing.join(", ")}` : ""}</p>
         </div>
       </header>
@@ -78,13 +79,13 @@ export default function ProfilePage() {
       </section>
 
       {data.questions.length > 0 && (
-        <section aria-labelledby="qs" className="rounded border border-amber-300 bg-amber-50 p-4">
+        <section aria-labelledby="qs" className="rounded border border-warn bg-warn-weak p-4">
           <h2 id="qs" className="font-medium">Needs your attention ({data.questions.length})</h2>
           <ul className="mt-2 list-disc pl-5 text-sm">{data.questions.map((q, i) => <li key={i}>{q.text}</li>)}</ul>
         </section>
       )}
 
-      {empty && <p className="text-sm text-gray-600">Your profile is empty. Upload a resume above, or add details by hand once the profile has a section to edit.</p>}
+      {empty && <p className="text-sm text-muted">Your profile is empty. Upload a resume above, or add details by hand once the profile has a section to edit.</p>}
 
       {ORDER.filter((s) => data.items[s]).map((s) => (
         <section key={s} aria-labelledby={`h-${s}`}>

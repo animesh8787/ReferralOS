@@ -31,10 +31,10 @@ export default function Onboarding() {
   const nextBtn = <button className="rounded bg-black px-3 py-1.5 text-white" onClick={() => next(step)}>Continue</button>;
 
   return (
-    <div className="mx-auto grid max-w-2xl gap-4 text-sm">
-      <header><h1 className="text-xl font-semibold">Let&apos;s set you up</h1><p className="text-gray-600">Every step except having some profile information can be skipped, and you can come back later.</p>
-        <ol className="mt-2 flex flex-wrap gap-2" aria-label="Setup steps">{STEPS.map(([k, l], i) => <li key={k}><button aria-current={step === k ? "step" : undefined} className={`rounded border px-2 py-1 text-xs ${step === k ? "bg-black text-white" : i < idx ? "bg-green-50" : ""}`} onClick={() => go(k)}>{i + 1}. {l}{onb?.skipped.includes(k) && " (skipped)"}</button></li>)}</ol></header>
-      {msg && <p role="status" className="rounded bg-gray-50 p-2">{msg}</p>}
+    <div className="grid max-w-2xl gap-4 text-sm">
+      <header><h1>Let&apos;s set you up</h1><p className="text-muted">Every step except having some profile information can be skipped, and you can come back later.</p>
+        <ol className="mt-2 flex flex-wrap gap-2" aria-label="Setup steps">{STEPS.map(([k, l], i) => <li key={k}><button aria-current={step === k ? "step" : undefined} className={`rounded border px-2 py-1 text-xs ${step === k ? "bg-black text-white" : i < idx ? "bg-ok-weak" : ""}`} onClick={() => go(k)}>{i + 1}. {l}{onb?.skipped.includes(k) && " (skipped)"}</button></li>)}</ol></header>
+      {msg && <p role="status" className="rounded bg-surface-2 p-2">{msg}</p>}
 
       {step === "resume" && <section aria-labelledby="s1" className="grid gap-3"><h2 id="s1" className="font-medium">Upload your resume</h2>
         <p>PDF or DOCX. We extract what we can and show you exactly what we found; nothing is added to your profile as confirmed until you review it. Image-only scans can&apos;t be read (no OCR); you&apos;d add details by hand.</p>
