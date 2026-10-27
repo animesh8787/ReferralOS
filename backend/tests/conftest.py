@@ -3,6 +3,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import close_all_sessions
 
 from app import ratelimit
 
@@ -19,10 +20,12 @@ def env(tmp_path, monkeypatch):
     reset_engine()
     ratelimit.reset()
     import app.models  # noqa: F401
+    close_all_sessions()  # tests open sessions they never close; on PostgreSQL an open transaction would block DROP TABLE forever
     eng = get_engine()
     Base.metadata.drop_all(eng)
     Base.metadata.create_all(eng)
     yield tmp_path
+    close_all_sessions()
     reset_engine()
     get_settings.cache_clear()
 

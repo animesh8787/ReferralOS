@@ -1,6 +1,7 @@
 """GitHub REST adapter (public data only). Tokens are intentionally not supported yet: private repos are never read.
 
 shortcut: no dependency-file skill inference (needs extra API calls); languages and topics only.
+An optional token (stored encrypted, never returned) only raises the rate limit.
 """
 import re
 
@@ -36,11 +37,14 @@ def parse_username(s: str) -> str:
 
 
 class GitHubClient:
-    def __init__(self, client: httpx.Client):
-        self.c = client
+    def __init__(self, client: httpx.Client, token: str | None = None):
+        self.c, self.token = client, token  # an optional user token only raises the rate limit; private repositories are still never read
 
     def _get(self, path: str, **kw) -> httpx.Response:
-        r = self.c.get(API + path, headers={"Accept": kw.pop("accept", "application/vnd.github+json")}, **kw)
+        headers = {"Accept": kw.pop("accept", "application/vnd.github+json")}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        r = self.c.get(API + path, headers=headers, **kw)
         if r.status_code in (403, 429) and r.headers.get("x-ratelimit-remaining") == "0":
             raise RateLimited("GitHub rate limit reached; try again later")
         if r.status_code == 404:
@@ -73,10 +77,10 @@ def to_items(repos: list[dict], readmes: dict[str, str | None]) -> list[Item]:
         flags = []
         if r.get("fork"):
             flags.append({"type": "possibly_not_original", "note": "This repository is a fork"})
-        if _BOILER.search(r["name"]) or any(_BOILER.search(t) for t in r.get("topics", [])):
+        if _BOILER.search(r["name"]) or any(_BOILER.search(t) for t in (r.get("topics") or [])):
             flags.append({"type": "possibly_not_original", "note": "Looks like a tutorial, template or course project"})
         readme = readmes.get(r["full_name"]) or ""
-        stack = {taxonomy.normalize(x) or None for x in [r.get("language")] + r.get("topics", [])}
+        stack = {taxonomy.normalize(x) or None for x in [r.get("language")] + (r.get("topics") or []) if x}
         stack |= taxonomy.skill_set(readme)
         stack = sorted(s for s in stack if s)
         if r.get("language") and (c := taxonomy.normalize(r["language"])):

@@ -1,0 +1,114 @@
+{
+  "machine": {
+    "os": "Windows-10-10.0.26300-SP0",
+    "cpus": 12,
+    "ram_gb": 15.7,
+    "python": "3.11.9"
+  },
+  "database": "sqlite",
+  "args": {
+    "db": "sqlite",
+    "users": 1,
+    "linkedin": 11000,
+    "hr": 5000,
+    "jobs": 500,
+    "out": "../docs/PERF_sqlite.json"
+  },
+  "note": "synthetic data only; one API process + one worker process; values are measurements, not targets",
+  "concurrent_phase_s": 15.4,
+  "users": [
+    {
+      "user": 0,
+      "upload_bytes": {
+        "linkedin": 1269039,
+        "hr": 680779
+      },
+      "import_linkedin_s": 4.9,
+      "import_linkedin_rows_per_s": 2255,
+      "import_linkedin_valid": 11000,
+      "score_after_import_s": 5.1,
+      "failed_tasks_after_li": 0,
+      "import_hr_s": 4.4,
+      "import_hr_rows_per_s": 1134,
+      "import_hr_valid": 5000
+    }
+  ],
+  "jobs_seeded": 500,
+  "matching_all_users_s": 4.6,
+  "matching_failed_tasks": 0,
+  "latency": {
+    "contacts_page": {
+      "p50_ms": 36.7,
+      "p95_ms": 46.0,
+      "max_ms": 47.6
+    },
+    "contacts_search": {
+      "p50_ms": 36.0,
+      "p95_ms": 42.9,
+      "max_ms": 51.3
+    },
+    "prospects_page": {
+      "p50_ms": 351.1,
+      "p95_ms": 369.6,
+      "max_ms": 430.1
+    },
+    "prospects_filtered": {
+      "p50_ms": 221.8,
+      "p95_ms": 236.0,
+      "max_ms": 273.5
+    },
+    "jobs_search": {
+      "p50_ms": 20.6,
+      "p95_ms": 22.4,
+      "max_ms": 34.6
+    },
+    "opportunities_page": {
+      "p50_ms": 136.3,
+      "p95_ms": 157.3,
+      "max_ms": 204.6
+    },
+    "companies": {
+      "p50_ms": 10.3,
+      "p95_ms": 18.4,
+      "max_ms": 21.7
+    },
+    "dashboard": {
+      "p50_ms": 177.8,
+      "p95_ms": 198.7,
+      "max_ms": 260.4
+    },
+    "email_contacts": {
+      "p50_ms": 30.2,
+      "p95_ms": 36.1,
+      "max_ms": 67.5
+    }
+  },
+  "exports": {
+    "prospects_csv": {
+      "seconds": 1.94,
+      "bytes": 1657184,
+      "status": 200
+    },
+    "prospects_xlsx": {
+      "seconds": 4.58,
+      "bytes": 628135,
+      "status": 200
+    },
+    "all_data_json": {
+      "seconds": 12.67,
+      "bytes": 56367341,
+      "status": 200
+    }
+  },
+  "tailoring_one_resume_s": {
+    "seconds": 1.54,
+    "status": 201
+  },
+  "total_rows_seen": {
+    "contacts": 11000,
+    "prospects": 11000,
+    "jobs": 500
+  },
+  "peak_memory_mb_api_plus_worker": 740,
+  "isolation_check": true
+}

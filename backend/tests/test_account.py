@@ -138,7 +138,7 @@ def test_llm_settings_need_consent_and_the_key_is_never_exposed(env, mk):
     blob = json.dumps([a.get("/api/settings/llm").json(), a.get("/api/me/export").json(), a.get("/api/diagnostics").json()])
     assert "sk-ant-" not in blob and "kkkkkkkk" not in blob and "llm.key" not in blob
     raw = scoped(a).execute(__import__("sqlalchemy").text("select value from user_settings where key='llm.key'")).scalar()  # noqa: F405
-    assert "kkkkkkkk" not in str(raw) and crypto.decrypt(json.loads(raw)["enc"]) == "sk-ant-" + "k" * 30
+    assert "kkkkkkkk" not in str(raw) and crypto.decrypt((raw if isinstance(raw, dict) else json.loads(raw))["enc"]) == "sk-ant-" + "k" * 30
     assert a.put("/api/settings/llm", {"provider": "none", "clear_key": True}).json()["key_set"] is False
 
 

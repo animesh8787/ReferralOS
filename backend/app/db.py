@@ -49,6 +49,10 @@ def get_engine():
             @event.listens_for(_engine, "connect")
             def _fk(dbapi_conn, _):
                 dbapi_conn.execute("PRAGMA foreign_keys=ON")
+                dbapi_conn.execute("PRAGMA journal_mode=WAL")  # readers no longer block the writer; several users + the worker share one file
+                dbapi_conn.execute("PRAGMA synchronous=NORMAL")
+                dbapi_conn.execute("PRAGMA busy_timeout=30000")
+                # shortcut: SQLite has one writer at a time; concurrent multi-user write load (imports + scoring) can hit 'database is locked'. Use PostgreSQL for that.
         else:
             _engine = create_engine(url, pool_pre_ping=True)
         _Session = sessionmaker(_engine, expire_on_commit=False)

@@ -116,3 +116,7 @@ atomic per-message claim and heartbeat during pacing; (3) consent checkboxes did
 (4) three pages overwrote their detailed status message with a generic one.
 Known gaps: Chromium used by the browser tests is the already-installed build (a newer one was not downloaded); real-time updates are
 by polling; dark mode not designed; LLM client verified against mock HTTP only.
+
+
+## Phase 11-12 (validation, docs)
+Full Postgres run found 2 Postgres-only bugs (varchar(16) approval_state -> migration 0010; NUL in query string -> 422). Real-service smoke found a GitHub null-language crash (regression test added). Perf measured (PERFORMANCE.md); SQLite documented as single-user after concurrent runs hit "database is locked". Added Gmail callback page and optional encrypted GitHub token. Docs: TEST_REPORT, PERFORMANCE, HANDOFF, REAL_SERVICE_CHECK, ACCEPTANCE. Not done: compose end to end; Playwright re-run after final fixes.

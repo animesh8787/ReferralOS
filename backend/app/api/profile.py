@@ -228,3 +228,37 @@ def import_portfolio(body: PortfolioIn, user: User = Depends(current_user), db: 
     ratelimit.check(f"portfolio:{user.id}", 10, 3600)
     audit(db, user.id, "portfolio_import")
     return _task(tasks.enqueue(db, "portfolio_import", {"url": body.url}))
+
+
+class TokenIn(BaseModel):
+    token: str | None = None
+
+
+@router.put("/settings/github-token")
+def put_github_token(body: TokenIn, user: User = Depends(current_user), db: Session = Depends(scoped_db)):
+    """Optional: a GitHub token only raises the API rate limit for public data. Stored encrypted; never returned or exported."""
+    from .. import crypto
+    from ..models.core import UserSetting
+    consent.require(db, "github")
+    row = db.query(UserSetting).filter(UserSetting.key == "github.token").first()
+    if not body.token:
+        if row:
+            db.delete(row)
+        audit(db, user.id, "github_token_removed")
+        return {"token_set": False}
+    t = body.token.strip()
+    if not 20 <= len(t) <= 300 or any(c.isspace() for c in t):
+        raise HTTPException(422, "That does not look like a GitHub token")
+    val = {"enc": crypto.encrypt(t)}
+    if row:
+        row.value = val
+    else:
+        db.add(UserSetting(key="github.token", value=val))
+    audit(db, user.id, "github_token_set")
+    return {"token_set": True}
+
+
+@router.get("/settings/github-token")
+def get_github_token(db: Session = Depends(scoped_db)):
+    from ..models.core import UserSetting
+    return {"token_set": bool(db.query(UserSetting.id).filter(UserSetting.key == "github.token").first())}

@@ -53,10 +53,24 @@ def redact(text: str) -> str:
     return text
 
 
-class RedactFilter(logging.Filter):
-    """No personal content or secrets in logs."""
+_installed = False
 
-    def filter(self, record):
-        record.msg = redact(record.getMessage())
-        record.args = ()
-        return True
+
+def install_log_redaction() -> None:
+    """Redact emails, phone numbers and token/password values from EVERY log record, whichever logger made it.
+    (A filter on the root logger would only see root's own records, so this wraps the record factory instead.)"""
+    global _installed
+    if _installed:
+        return
+    base = logging.getLogRecordFactory()
+
+    def factory(*args, **kwargs):
+        rec = base(*args, **kwargs)
+        try:
+            rec.msg, rec.args = redact(rec.getMessage()), ()
+        except Exception:  # noqa: BLE001  a logging problem must never break a request
+            pass
+        return rec
+
+    logging.setLogRecordFactory(factory)
+    _installed = True

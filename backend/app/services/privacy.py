@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import Base
 from .. import storage
 
-SECRET_SETTINGS = {"llm.key", "oauth.gmail.pending"}  # rows in user_settings that hold secrets: never exported
+SECRET_SETTINGS = {"llm.key", "github.token", "oauth.gmail.pending"}  # rows in user_settings that hold secrets: never exported
 SECRET_COLS = {"password_hash", "token_hash", "csrf_token", "encrypted_access", "encrypted_refresh", "encrypted_key"}
 
 

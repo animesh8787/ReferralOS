@@ -181,3 +181,11 @@ def test_ssrf_urls_are_rejected(env, mk, url):
     a = mk("a@example.com")
     grant(a, "portfolio")
     assert a.post("/api/profile/portfolio", {"url": url}).status_code == 422
+
+
+def test_github_repo_without_language_or_topics_does_not_crash():
+    # found by the real-service smoke check: the public API returns language=null and may omit topics
+    from app.adapters import github_api
+    items = github_api.to_items([{"name": "notes", "full_name": "u/notes", "html_url": "https://github.com/u/notes", "language": None,
+                                  "topics": None, "description": None, "fork": False}], {"u/notes": None})
+    assert [i.section for i in items] == ["project"]

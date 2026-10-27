@@ -30,7 +30,10 @@ def parse_resume(ctx):
 @handler("github_import")
 def github_import(ctx):
     user = ctx.payload["username"]
-    gh = github_api.GitHubClient(make_client())
+    from ..models.core import UserSetting
+    from .. import crypto
+    row = ctx.db.query(UserSetting).filter(UserSetting.key == "github.token").first()
+    gh = github_api.GitHubClient(make_client(), crypto.decrypt(row.value["enc"]) if row and row.value.get("enc") else None)
     try:
         repos = gh.repos(user)
         readmes = {}

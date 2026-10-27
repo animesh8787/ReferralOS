@@ -80,7 +80,7 @@ class OutreachMessage(IdMixin, UserScoped, Base):
     attach_resume_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     ledger: Mapped[list] = mapped_column(JSON, default=list)
     risk_flags: Mapped[list] = mapped_column(JSON, default=list)
-    approval_state: Mapped[str] = mapped_column(String(16), default="awaiting_approval")  # draft|awaiting_approval|approved|rejected|skipped|cancelled
+    approval_state: Mapped[str] = mapped_column(String(24), default="awaiting_approval")  # draft|awaiting_approval|approved|rejected|skipped|cancelled
     send_state: Mapped[str] = mapped_column(String(22), default="not_sent")  # not_sent|queued|sending|sent|delivery_unconfirmed|failed|manual_pending|manual_sent|dry_run
     approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
