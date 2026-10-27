@@ -6,6 +6,8 @@ import useSWR from "swr";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
 import PreferencesForm from "@/components/PreferencesForm";
 import WeightsEditor from "@/components/WeightsEditor";
+import Notice from "@/components/ui/Notice";
+import PageHeader from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
 
 type Cfg = { weights: Record<string, number>; missing_policy: string };
@@ -33,11 +35,12 @@ export default function Settings() {
     <label key={k} className="flex flex-wrap items-center gap-2"><input type="checkbox" checked={v} onChange={async (e) => { await api(path, { method: "PUT", body: { [k]: e.target.checked } }); mut(); }} />{k.replaceAll("_", " ")}</label>));
 
   return (
-    <div className="grid max-w-3xl gap-8 text-sm">
-      <header><h1>Settings</h1>{msg && <p role="status" className="mt-1">{msg}</p>}</header>
-      <section aria-labelledby="t"><h2 id="t" className="mb-2 text-base font-medium">Career targets</h2><PreferencesForm /></section>
+    <div className="grid max-w-3xl gap-5 text-sm">
+      <PageHeader title="Settings" />
+      {msg && <Notice>{msg}</Notice>}
+      <section aria-labelledby="t" className="card grid gap-3 p-5"><h2 id="t">Career targets</h2><PreferencesForm /></section>
 
-      <section aria-labelledby="sc" className="grid gap-3"><h2 id="sc" className="text-base font-medium">Scoring</h2>
+      <section aria-labelledby="sc" className="card grid gap-3 p-5"><h2 id="sc">Scoring</h2>
         <p className="text-muted">Weights are always rescaled to total 100 and every score shows its parts. Recalculate afterwards to apply them.</p>
         {scoring.data && <WeightsEditor title="Referral priority (who to approach)" weights={scoring.data.weights} onSave={async (w) => { await api("/scoring/config", { method: "PUT", body: { weights: w } }); scoring.mutate(); }} />}
         <label className="flex flex-wrap items-center gap-2">When data is missing <select className="rounded border px-2 py-1" value={scoring.data?.missing_policy ?? "neutral"} onChange={async (e) => { await api("/scoring/config", { method: "PUT", body: { missing_policy: e.target.value } }); scoring.mutate(); }}>
@@ -48,11 +51,11 @@ export default function Settings() {
           <WeightsEditor title="Opportunity priority" weights={matching.data.opportunity_weights} onSave={async (w) => { await api("/matching/config", { method: "PUT", body: { opportunity_weights: w } }); matching.mutate(); }} />
           <label className="flex flex-wrap items-center gap-2">Contacts recommended per job (1 to 5) <input type="number" min={1} max={5} className="w-16 rounded border px-2 py-1" defaultValue={matching.data.contacts_per_job} onBlur={(e) => say(async () => { await api("/matching/config", { method: "PUT", body: { contacts_per_job: Number(e.target.value) } }); matching.mutate(); }, "Saved.")} /></label></>}</section>
 
-      <section aria-labelledby="src" className="grid gap-1"><h2 id="src" className="text-base font-medium">Job sources</h2><p className="text-muted">Switch off a source and its boards are skipped (and reported as skipped).</p>{toggle(sources.data, "/settings/sources", sources.mutate)}</section>
+      <section aria-labelledby="src" className="card grid gap-3 p-5"><h2 id="src">Job sources</h2><p className="text-muted">Switch off a source and its boards are skipped (and reported as skipped).</p>{toggle(sources.data, "/settings/sources", sources.mutate)}</section>
 
-      <section aria-labelledby="em" className="grid gap-1"><h2 id="em" className="text-base font-medium">Email and sending</h2><p>Sender name, delivery mode (manual by default), limits, Gmail connection and the lawful-use acknowledgement: <Link className="underline" href="/outreach/settings">Outreach settings</Link>.</p></section>
+      <section aria-labelledby="em" className="card grid gap-3 p-5"><h2 id="em">Email and sending</h2><p>Sender name, delivery mode (manual by default), limits, Gmail connection and the lawful-use acknowledgement: <Link className="underline" href="/outreach/settings">Outreach settings</Link>.</p></section>
 
-      <section aria-labelledby="ai" className="grid gap-2"><h2 id="ai" className="text-base font-medium">AI assistance (optional)</h2>
+      <section aria-labelledby="ai" className="card grid gap-3 p-5"><h2 id="ai">AI assistance (optional)</h2>
         <p className="text-muted">Everything works without it. If you turn it on, you use your own key, and it may only propose rewordings of single resume bullets, which are still checked against your profile. {llm.data?.what_is_sent}</p>
         <p className="text-xs text-warn">{llm.data?.status}</p>
         <ConsentCheckbox name="llm" onChange={() => llm.mutate()} />
@@ -64,9 +67,9 @@ export default function Settings() {
           <button className="rounded border px-2 py-1" onClick={() => say(async () => { await api("/settings/llm", { method: "PUT", body: { provider: llm.data?.provider ?? "none", monthly_budget_usd: Number(budget) } }); setBudget(""); llm.mutate(); }, "Budget saved.")}>Save</button>
           <span className="text-muted">Spent this month: ${llm.data?.spent_this_month_usd ?? 0}. Calls stop when the budget is reached. {llm.data?.estimate}</span></label></section>
 
-      <section aria-labelledby="nt" className="grid gap-1"><h2 id="nt" className="text-base font-medium">Notifications (in the app)</h2>{toggle(notes.data, "/settings/notifications", notes.mutate)}<p className="text-xs text-muted">No emails are sent about your activity.</p></section>
+      <section aria-labelledby="nt" className="card grid gap-3 p-5"><h2 id="nt">Notifications (in the app)</h2>{toggle(notes.data, "/settings/notifications", notes.mutate)}<p className="text-xs text-muted">No emails are sent about your activity.</p></section>
 
-      <section aria-labelledby="pv" className="grid gap-2"><h2 id="pv" className="text-base font-medium">Privacy and your data</h2>
+      <section aria-labelledby="pv" className="card grid gap-3 p-5"><h2 id="pv">Privacy and your data</h2>
         <p>What is held: {priv.data && Object.entries(priv.data.holds).map(([k, v]) => `${v} ${k.replaceAll("_", " ")}`).join(" · ")}. <Link className="underline" href="/privacy">Read the privacy summary</Link>.</p>
         <label className="flex flex-wrap items-center gap-2">Auto-delete raw import files after <input type="number" min={1} max={3650} className="w-20 rounded border px-2 py-1" placeholder={priv.data?.raw_import_retention_days ? String(priv.data.raw_import_retention_days) : "off"} value={days} onChange={(e) => setDays(e.target.value)} /> days
           <button className="rounded border px-2 py-1" onClick={() => say(async () => { await api("/privacy/retention", { method: "PUT", body: { raw_import_days: days ? Number(days) : null } }); priv.mutate(); }, days ? "Retention saved." : "Retention turned off.")}>Save</button>

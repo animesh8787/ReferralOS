@@ -2,6 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
+import { Send } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
+import Notice from "@/components/ui/Notice";
+import PageHeader from "@/components/ui/PageHeader";
 import { api, settle } from "@/lib/api";
 
 type Flag = { code: string; severity?: string; detail: string };
@@ -41,17 +45,14 @@ export default function Outreach() {
 
   return (
     <div className="grid gap-4">
-      <header className="flex flex-wrap items-end justify-between gap-2">
-        <div><h1>Outreach</h1>
-          <p className="text-sm text-muted">Nothing is sent until you approve it. LinkedIn messages are never sent by this app: you copy them and send them yourself.</p></div>
-        <div className="flex items-center gap-2 text-sm">
+      <PageHeader title="Outreach" sub="Nothing is sent until you approve it. LinkedIn messages are never sent by this app: you copy them and send them yourself."
+        actions={<div className="flex items-center gap-2 text-sm">
           <Link className="underline" href="/outreach/settings">Settings and Gmail</Link><Link className="underline" href="/suppression">Do-not-contact list</Link>
           <button className={`rounded border px-3 py-1 ${cfg.data?.global_pause ? "bg-danger-weak" : ""}`} onClick={() => run(() => api("/outreach/pause", { body: { paused: !cfg.data?.global_pause } }), cfg.data?.global_pause ? "Sending resumed." : "All sending paused.")}>
             {cfg.data?.global_pause ? "Resume all sending" : "Pause all sending"}</button>
-        </div>
-      </header>
-      {cfg.data && !cfg.data.lawful_use_ack && <p role="alert" className="rounded bg-warn-weak p-2 text-sm">Before anything can be sent, read and acknowledge the lawful-use statement in <Link className="underline" href="/outreach/settings">Settings</Link>.</p>}
-      {msg && <p role="status" className="text-sm">{msg}</p>}
+        </div>} />
+      {cfg.data && !cfg.data.lawful_use_ack && <Notice kind="warn">Before anything can be sent, read and acknowledge the lawful-use statement in <Link className="underline" href="/outreach/settings">Settings</Link>.</Notice>}
+      {msg && <Notice>{msg}</Notice>}
       <div role="tablist" aria-label="Outreach sections" className="flex flex-wrap gap-2">{TABS.map((t) => <button key={t} role="tab" aria-selected={tab === t} className={`rounded border px-3 py-1 text-sm ${tab === t ? "bg-black" : ""}`} onClick={() => setTab(t)}>{t}</button>)}</div>
 
       {tab === "Review" && (
@@ -60,12 +61,12 @@ export default function Outreach() {
             <button className="rounded bg-black px-3 py-1 text-sm text-white" onClick={() => run(async () => { const r = await api<{ messages: string[]; skipped: { why: string }[] }>("/outreach/generate", { body: {} }); return `${r.messages.length} drafted, ${r.skipped.length} skipped.`; }, "Batch prepared.")}>Prepare a new batch</button>
             <button disabled={approvable === 0} className="rounded border px-3 py-1 text-sm disabled:opacity-40" onClick={approveSelected}>Approve {sel.length ? "selected" : "all ready"} ({approvable})</button></div>
           {confirm && (
-            <form className="mb-2 grid gap-2 rounded border border-warn bg-warn-weak p-3 text-sm" onSubmit={(e) => { e.preventDefault(); approveSelected(); }}>
+            <form className="notice notice-warn mb-2 grid gap-2" onSubmit={(e) => { e.preventDefault(); approveSelected(); }}>
               <p>To approve <strong>{approvable}</strong> messages, type the number of messages and your daily sending limit ({cfg.data?.daily_limit}) to confirm.</p>
               <label className="flex items-center gap-2">Messages <input required type="number" className="w-24 rounded border px-2 py-1" onChange={(e) => setConfirm({ ...confirm, count: Number(e.target.value) })} /></label>
               <label className="flex items-center gap-2">Daily limit <input required type="number" className="w-24 rounded border px-2 py-1" onChange={(e) => setConfirm({ ...confirm, limit: Number(e.target.value) })} /></label>
               <button className="w-fit rounded bg-black px-3 py-1 text-white">Confirm and approve</button></form>)}
-          {items.length === 0 && <p className="text-sm text-muted">Nothing waiting. Prepare a batch from your best verified jobs, or add jobs and contacts first.</p>}
+          {items.length === 0 && <EmptyState icon={Send} title="Nothing waiting" sub="Prepare a batch from your best verified jobs, or add jobs and contacts first." />}
           {items.length > 0 && (
             <div className="overflow-auto"><table className="min-w-full border text-xs"><caption className="sr-only">Messages waiting for your approval</caption>
               <thead><tr className="bg-surface-2 text-left">{["", "To", "Channel", "Company · job", "Job status", "Match", "Contact", "Subject / preview", "Risk", ""].map((h, i) => <th key={i} className="border px-2 py-1">{h}</th>)}</tr></thead>
@@ -85,9 +86,9 @@ export default function Outreach() {
         </section>)}
 
       {tab === "Manual-send queue" && (
-        <section aria-labelledby="mq"><h2 id="mq" className="mb-2 font-medium">Send these yourself, then mark them sent</h2>
+        <section aria-labelledby="mq"><h2 id="mq" className="eyebrow mb-2">Send these yourself, then mark them sent</h2>
           {queue.data?.items.length === 0 && <p className="text-sm text-muted">Nothing approved for manual sending.</p>}
-          <ul className="grid gap-2">{queue.data?.items.map((m) => <li key={m.id} className="rounded border p-3 text-sm">
+          <ul className="grid gap-2">{queue.data?.items.map((m) => <li key={m.id} className="card p-3 text-sm">
             <p className="font-medium">{m.to_name ?? m.to_email} · {m.company} · {m.channel === "linkedin" ? "LinkedIn" : "Email"}</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               {m.to_linkedin_url && <a className="underline" href={m.to_linkedin_url} target="_blank" rel="noopener noreferrer">Open LinkedIn profile</a>}
@@ -104,11 +105,11 @@ export default function Outreach() {
             if (r.sent === undefined) return "The sender is still working. Check back in a moment.";
             return `Sent ${r.sent}${r.dry_run ? `, dry-run ${r.dry_run}` : ""}; held ${r.held?.length ?? 0}${r.held?.[0] ? ` (${r.held[0].codes.join(", ")})` : ""}; blocked ${r.blocked?.length ?? 0}${r.blocked?.[0] ? ` (${r.blocked[0].codes.join(", ")})` : ""}; unconfirmed ${r.unconfirmed ?? 0}.`;
           }, "Sender ran.")}>Send approved emails now</button>
-          <ul className="grid gap-1">{sending.data?.items.map((m) => <li key={m.id} className="rounded border p-2">{m.to_email ?? m.to_name} · {m.send_state}{m.last_block?.[0] && <span className="text-warn"> · {m.last_block[0].code}: {m.last_block[0].detail}</span>}
+          <ul className="grid gap-1">{sending.data?.items.map((m) => <li key={m.id} className="card p-2">{m.to_email ?? m.to_name} · {m.send_state}{m.last_block?.[0] && <span className="text-warn"> · {m.last_block[0].code}: {m.last_block[0].detail}</span>}
             {m.send_state === "delivery_unconfirmed" && <strong className="text-danger"> · delivery unconfirmed: it will never be re-sent automatically. <Link className="underline" href={`/outreach/${m.id}`}>Reconcile</Link></strong>}</li>)}</ul></section>)}
 
       {tab === "Activity" && (
-        <section aria-labelledby="ac"><h2 id="ac" className="mb-2 font-medium">Your activity log</h2>
+        <section aria-labelledby="ac"><h2 id="ac" className="eyebrow mb-2">Your activity log</h2>
           <ul className="grid gap-1 text-xs">{audit.data?.items.map((a, i) => <li key={i} className="rounded border px-2 py-1">{new Date(a.at + "Z").toLocaleString()} · {a.action.replaceAll("_", " ")} {Object.keys(a.detail).length > 0 && <span className="text-muted">{JSON.stringify(a.detail)}</span>}</li>)}</ul></section>)}
       <p className="text-xs text-muted">Follow-ups are only ever drafted for your approval; <button className="underline" onClick={() => run(async () => { const r = await api<{ drafts_created: string[] }>("/outreach/followups/scan", { body: {} }); return `${r.drafts_created.length} follow-up draft(s) waiting in Review.`; }, "Follow-ups checked.")}>check for due follow-ups</button>.</p>
     </div>

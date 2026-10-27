@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
 import StatusBadge from "@/components/StatusBadge";
+import Notice from "@/components/ui/Notice";
 import Skeleton from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 
@@ -24,11 +25,11 @@ export default function JobDetail() {
   const { data, error, mutate } = useSWR<Detail>(`/jobs/${id}`, (p: string) => api<Detail>(p));
   const [url, setUrl] = useState("");
   const [msg, setMsg] = useState("");
-  if (error) return <p role="alert" className="text-danger">Job not found.</p>;
+  if (error) return <Notice kind="err">Job not found.</Notice>;
   if (!data) return <Skeleton rows={5} />;
   return (
     <div className="grid max-w-4xl gap-5">
-      <header><h1>{data.title}</h1><p>{data.company} · {data.location ?? "location not stated"}</p>
+      <header className="grid gap-1"><h1>{data.title}</h1><p className="text-muted">{data.company} · {data.location ?? "location not stated"}</p>
         <p className="mt-1 flex items-center gap-2"><StatusBadge status={data.status} />{data.needs_reverify && <span className="text-sm text-warn">Evidence is older than 3 days; re-verify before using.</span>}</p>
         <div className="mt-2 flex gap-2">
           <button className="rounded border px-3 py-1 text-sm" onClick={async () => { await api(`/jobs/${id}/verify`, { body: {} }); mutate(); }}>Verify again</button>
@@ -36,28 +37,28 @@ export default function JobDetail() {
           <Link className="rounded border px-3 py-1 text-sm" href={`/opportunities/${id}`}>See match analysis</Link>
         </div></header>
 
-      <section aria-labelledby="why"><h2 id="why" className="font-medium">Why this status</h2>
+      <section aria-labelledby="why" className="card p-4"><h2 id="why" className="eyebrow mb-2">Why this status</h2>
         <ul className="list-disc pl-5 text-sm">{data.status_reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
-        {data.outreach_note && <p className="mt-1 rounded bg-warn-weak p-2 text-sm">{data.outreach_note}</p>}</section>
+        {data.outreach_note && <div className="mt-2"><Notice kind="warn">{data.outreach_note}</Notice></div>}</section>
 
-      <section aria-labelledby="ev"><h2 id="ev" className="font-medium">Verification evidence</h2>
+      <section aria-labelledby="ev" className="card p-4"><h2 id="ev" className="eyebrow mb-2">Verification evidence</h2>
         <table className="min-w-full border text-xs"><thead><tr className="bg-surface-2 text-left"><th className="border px-2 py-1">When (UTC)</th><th className="border px-2 py-1">Source</th><th className="border px-2 py-1">What was seen</th><th className="border px-2 py-1">Detail</th></tr></thead>
           <tbody>{data.verification_evidence.map((e, i) => <tr key={i}><td className="border px-2 py-1">{e.checked_at}</td><td className="border px-2 py-1">{e.source}</td><td className="border px-2 py-1">{e.kind.replaceAll("_", " ")}</td><td className="border px-2 py-1">{JSON.stringify(e.detail)}</td></tr>)}</tbody></table></section>
 
-      <section aria-labelledby="route"><h2 id="route" className="font-medium">Referral route</h2>
+      <section aria-labelledby="route" className="card p-4"><h2 id="route" className="eyebrow mb-2">Referral route</h2>
         <p className="text-sm">{ROUTE[data.referral_route.status]}{data.referral_route.evidence_url && <> · <a className="underline" href={data.referral_route.evidence_url} target="_blank" rel="noopener noreferrer">evidence</a></>}</p>
         {data.referral_route.evidence_excerpt && <blockquote className="mt-1 border-l-2 pl-2 text-xs text-muted">…{data.referral_route.evidence_excerpt}…</blockquote>}
         <p className="mt-1 text-xs text-muted">Messages will not claim a referral programme unless it is confirmed on an official page.</p>
         <form className="mt-2 flex gap-2 text-sm" onSubmit={async (e) => { e.preventDefault(); try { await api(`/companies/${data.company_id}/referral-route/check`, { body: { urls: [url] } }); setMsg("Checked."); mutate(); } catch (x) { setMsg((x as Error).message); } }}>
           <input required aria-label="Official careers or referral page URL" className="flex-1 rounded border px-2 py-1" placeholder="Official careers or referral page URL" value={url} onChange={(e) => setUrl(e.target.value)} /><button className="rounded border px-3 py-1">Check page</button></form>
-        {msg && <p role="status" className="text-sm">{msg}</p>}</section>
+        {msg && <Notice>{msg}</Notice>}</section>
 
-      <section aria-labelledby="src"><h2 id="src" className="font-medium">Sources</h2>
+      <section aria-labelledby="src" className="card p-4"><h2 id="src" className="eyebrow mb-2">Sources</h2>
         <ul className="list-disc pl-5 text-sm">{data.sources.map((s, i) => <li key={i}>{s.type}{s.board && ` (${s.board})`}{s.source_url && <> · <a className="underline" href={s.source_url} target="_blank" rel="noopener noreferrer">listing</a></>}</li>)}</ul>
         {data.apply_url && <p className="mt-1 text-sm"><a className="underline" href={data.apply_url} target="_blank" rel="noopener noreferrer">Official application link</a></p>}
         <p className="mt-1 text-sm">You know {data.contacts_at_company} people at this company.</p></section>
 
-      <section aria-labelledby="jd"><h2 id="jd" className="font-medium">Description</h2>
+      <section aria-labelledby="jd" className="card p-4"><h2 id="jd" className="eyebrow mb-2">Description</h2>
         <p className="whitespace-pre-wrap text-sm">{data.description ?? "No description available. Paste it from the posting if you need analysis."}</p></section>
     </div>
   );

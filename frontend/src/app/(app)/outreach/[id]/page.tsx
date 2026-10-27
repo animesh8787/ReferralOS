@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
 import CopyButton from "@/components/CopyButton";
+import Notice from "@/components/ui/Notice";
 import Skeleton from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 
@@ -23,7 +24,7 @@ export default function MessagePage() {
   const [body, setBody] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const [msg, setMsg] = useState("");
-  if (error) return <p role="alert" className="text-danger">Message not found.</p>;
+  if (error) return <Notice kind="err">Message not found.</Notice>;
   if (!m) return <Skeleton rows={5} />;
   const sent = ["sent", "manual_sent", "sending", "delivery_unconfirmed"].includes(m.send_state);
   const dirty = (subject !== null && subject !== m.subject) || (body !== null && body !== m.body);
@@ -31,20 +32,20 @@ export default function MessagePage() {
 
   return (
     <div className="grid max-w-4xl gap-4 text-sm">
-      <header><h1>{m.kind.replace("_", " ")} to {m.to_name ?? m.to_email}</h1>
+      <header className="grid gap-1"><h1>{m.kind.replace("_", " ")} to {m.to_name ?? m.to_email}</h1>
         <p>{m.company} · {m.job_title ?? "no specific job"} {m.job_status && `(${m.job_status})`} · {m.channel === "linkedin" ? "LinkedIn, sent by you" : "Email"}</p>
         <p className="text-muted">Approval: <strong>{m.approval_state.replace("_", " ")}</strong> · Delivery: <strong>{m.send_state.replace("_", " ")}</strong> · Pipeline: {m.pair_status}</p></header>
-      {m.stale && <p role="alert" className="rounded bg-danger-weak p-2 text-danger">{m.stale_reason}</p>}
+      {m.stale && <Notice kind="err">{m.stale_reason}</Notice>}
       {m.content_blocks.length > 0 && <section aria-label="Must fix before approval" className="rounded border border-danger bg-danger-weak p-3"><h2 className="font-medium text-danger">Fix before approving</h2><ul className="list-disc pl-5">{m.content_blocks.map((b, i) => <li key={i}><strong>{b.code.replaceAll("_", " ")}</strong>: {b.detail}</li>)}</ul></section>}
-      {m.last_block?.length > 0 && <p className="rounded bg-warn-weak p-2">Last send attempt: {m.last_block.map((b) => `${b.code}: ${b.detail}`).join("; ")}</p>}
-      {m.risk_flags.length > 0 && <section aria-label="Risk flags"><h2 className="font-medium">Things to know</h2><ul className="list-disc pl-5">{m.risk_flags.map((f, i) => <li key={i} className={f.severity === "high" ? "text-danger" : ""}>{f.detail}</li>)}</ul></section>}
-      {m.region_guidance?.requires_extra_ack && <p className="rounded bg-warn-weak p-2">{m.region_guidance.text} {m.region_guidance.disclaimer}</p>}
+      {m.last_block?.length > 0 && <Notice kind="warn">Last send attempt: {m.last_block.map((b) => `${b.code}: ${b.detail}`).join("; ")}</Notice>}
+      {m.risk_flags.length > 0 && <section aria-label="Risk flags" className="card p-4"><h2 className="eyebrow mb-2">Things to know</h2><ul className="list-disc pl-5">{m.risk_flags.map((f, i) => <li key={i} className={f.severity === "high" ? "text-danger" : ""}>{f.detail}</li>)}</ul></section>}
+      {m.region_guidance?.requires_extra_ack && <Notice kind="warn">{m.region_guidance.text} {m.region_guidance.disclaimer}</Notice>}
 
       {m.channel === "email" && (
-        <section aria-labelledby="sj"><h2 id="sj" className="font-medium">Subject</h2>
+        <section aria-labelledby="sj" className="card p-4"><h2 id="sj" className="eyebrow mb-2">Subject</h2>
           <input aria-label="Subject" disabled={sent} className="w-full rounded border px-2 py-1" value={subject ?? m.subject ?? ""} onChange={(e) => setSubject(e.target.value)} />
           <div className="mt-1 flex flex-wrap gap-2">{m.subject_options.map((o) => <button key={o} disabled={sent} className="rounded border px-2 py-0.5 text-xs" onClick={() => setSubject(o)}>{o}</button>)}</div></section>)}
-      <section aria-labelledby="bd"><div className="flex items-center justify-between"><h2 id="bd" className="font-medium">Message</h2>
+      <section aria-labelledby="bd" className="card p-4"><div className="flex items-center justify-between"><h2 id="bd" className="eyebrow mb-2">Message</h2>
         <span className="flex gap-2">{Object.keys(m.variants).map((v) => <button key={v} disabled={sent} className="rounded border px-2 py-0.5 text-xs" onClick={() => act(() => api(`/outreach/messages/${id}`, { method: "PATCH", body: { variant: v } }), `Switched to version ${v}.`)}>Use version {v}</button>)}
           <CopyButton text={body ?? m.body} label="Copy message" />{m.connect_note && <CopyButton text={m.connect_note} label="Copy connection note" />}</span></div>
         <textarea aria-label="Message body" disabled={sent} rows={14} className="mt-1 w-full rounded border px-2 py-1 font-mono text-xs" value={body ?? m.body} onChange={(e) => setBody(e.target.value)} />
@@ -52,7 +53,7 @@ export default function MessagePage() {
         {dirty && <button className="mt-1 rounded bg-black px-3 py-1 text-white" onClick={() => act(() => api(`/outreach/messages/${id}`, { method: "PATCH", body: { subject, body } }), "Saved. Any earlier approval was withdrawn: approve again to use this text.")}>Save changes</button>}
         {m.attach_resume_id && <p className="mt-1 text-xs">Your approved tailored resume (PDF) will be attached. <button className="underline" onClick={() => act(() => api(`/outreach/messages/${id}`, { method: "PATCH", body: { detach_resume: true } }), "Resume detached.")}>Don&apos;t attach</button></p>}</section>
 
-      <section aria-labelledby="sup"><h2 id="sup" className="font-medium">What this message claims about you</h2>
+      <section aria-labelledby="sup" className="card p-4"><h2 id="sup" className="eyebrow mb-2">What this message claims about you</h2>
         <ul className="list-disc pl-5">{m.ledger.map((c, i) => <li key={i}>{c.text} <em className={c.status === "validated" ? "text-ok" : "text-danger"}>({c.status.replace("_", " ")} against your profile)</em></li>)}{m.ledger.length === 0 && <li className="list-none text-muted">No factual claims about your background.</li>}</ul></section>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -66,21 +67,21 @@ export default function MessagePage() {
       {m.mailto_too_long && <p className="text-xs text-muted">This message is too long for a mail link; use the .eml download or copy it.</p>}
 
       {m.send_state === "delivery_unconfirmed" && (
-        <section aria-labelledby="uc" className="rounded border border-danger p-3"><h2 id="uc" className="font-medium">We could not confirm this was delivered</h2>
+        <section aria-labelledby="uc" className="rounded border border-danger p-3"><h2 id="uc" className="eyebrow mb-2">We could not confirm this was delivered</h2>
           <p>It will <strong>not</strong> be re-sent automatically. Check your Sent folder, or let us look.</p>
           <div className="mt-1 flex gap-2"><button className="rounded border px-2 py-1" onClick={async () => { const r = await api<{ note: string }>(`/outreach/messages/${id}/reconcile`, { body: {} }); setMsg(r.note); mutate(); }}>Look in Sent mail</button>
             <button className="rounded border px-2 py-1" onClick={() => act(() => api(`/outreach/messages/${id}/resolve`, { body: { outcome: "sent" } }), "Recorded as sent.")}>It was delivered</button>
             <button className="rounded border px-2 py-1" onClick={() => act(() => api(`/outreach/messages/${id}/resolve`, { body: { outcome: "not_sent" } }), "Moved back to review. Nothing was queued.")}>It was not delivered</button></div></section>)}
 
       {sent && (
-        <section aria-labelledby="rp"><h2 id="rp" className="font-medium">Record a reply</h2>
+        <section aria-labelledby="rp" className="card p-4"><h2 id="rp" className="eyebrow mb-2">Record a reply</h2>
           <textarea aria-label="Reply text" rows={3} className="w-full rounded border px-2 py-1" placeholder="Paste their reply or bounce notice" value={reply} onChange={(e) => setReply(e.target.value)} />
           <button disabled={!reply.trim()} className="mt-1 rounded border px-3 py-1 disabled:opacity-40" onClick={() => act(async () => { const r = await api<{ label: string; needs_confirmation: string | null }>(`/outreach/messages/${id}/reply`, { body: { body: reply, from_addr: m.to_email ?? "" } }); setReply(""); return `Recorded as: ${r.label.replace("_", " ")}. ${r.needs_confirmation ?? ""}`; }, "Reply recorded.")}>Record reply</button></section>)}
 
-      <section aria-labelledby="ev"><h2 id="ev" className="font-medium">History</h2>
+      <section aria-labelledby="ev" className="card p-4"><h2 id="ev" className="eyebrow mb-2">History</h2>
         <ul className="grid gap-1 text-xs">{events.data?.map((e) => <li key={e.id} className="rounded border px-2 py-1">{new Date(e.at + "Z").toLocaleString()} · <strong>{e.type.replaceAll("_", " ")}</strong>{e.label && ` (${e.label.replace("_", " ")})`}
           {e.type === "UNSUBSCRIBE_REQUESTED" && e.confirmed === null && <span> · <button className="underline" onClick={() => act(() => api(`/outreach/events/${e.id}/confirm`, { body: { confirmed: true } }), "Added to your do-not-contact list.")}>Yes, stop contacting them</button> · <button className="underline" onClick={() => act(() => api(`/outreach/events/${e.id}/confirm`, { body: { confirmed: false } }), "Dismissed.")}>No, this isn&apos;t an opt-out</button></span>}</li>)}</ul></section>
-      {msg && <p role="status">{msg}</p>}
+      {msg && <Notice>{msg}</Notice>}
       <p><Link className="underline" href="/outreach">Back to outreach</Link></p>
     </div>
   );

@@ -74,11 +74,11 @@ input:disabled, select:disabled, textarea:disabled { opacity: .55; }
 /* Buttons: every `button.rounded.border` is a control; `.bg-black` is the primary; `.underline` stays a text button. */
 button { cursor: pointer; transition: background-color .15s, border-color .15s, box-shadow .2s, transform .1s, color .15s; }
 button:disabled { cursor: not-allowed; }
-button.rounded.border, .btn {
+button.rounded.border, a.rounded.border, .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
   background: var(--surface); color: var(--text); padding: .4rem .85rem; font: 600 11px/1.2 var(--font-mono); letter-spacing: .1em; text-transform: uppercase;
 }
-button.rounded.border:hover:not(:disabled), .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-text); background: var(--accent-weak); }
+button.rounded.border:hover:not(:disabled), a.rounded.border:hover, .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-text); background: var(--accent-weak); }
 button.bg-black, .btn-primary {
   background: var(--btn) !important; color: var(--on-btn) !important; border-color: var(--btn) !important; border-radius: var(--radius-sm);
   font: 600 11px/1.2 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; padding: .5rem 1rem;
@@ -101,7 +101,7 @@ tbody tr:last-child td { border-bottom: 0; }
 caption { text-align: left; padding: .5rem .75rem; color: var(--muted); }
 
 /* Boxes the pages draw by hand */
-.rounded.border:not(button):not(input):not(select):not(textarea):not(span):not(td):not(th):not(label) {
+.rounded.border:not(button):not(a):not(input):not(select):not(textarea):not(span):not(td):not(th):not(label) {
   background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
 }
 details > summary { cursor: pointer; transition: color .15s; }
@@ -176,3 +176,5 @@ button.bg-danger:hover:not(:disabled) { filter: brightness(1.1); }
 /* grid items may shrink below their content, so wide tables scroll inside their own wrapper instead of widening the page */
 .grid > * { min-width: 0; }
 @media (min-width: 901px) { .menu-btn { display: none; } }
+
+button[aria-current=step] { background: var(--accent-weak); border-color: var(--accent) !important; color: var(--accent-text); }

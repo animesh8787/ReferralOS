@@ -5,6 +5,10 @@ import useSWR from "swr";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
 import ItemCard from "@/components/ItemCard";
 import { Item } from "@/components/ProvenanceBadge";
+import { UserRound } from "lucide-react";
+import Dropzone from "@/components/ui/Dropzone";
+import EmptyState from "@/components/ui/EmptyState";
+import Notice from "@/components/ui/Notice";
 import Skeleton from "@/components/ui/Skeleton";
 import { api, settle, upload } from "@/lib/api";
 
@@ -44,24 +48,24 @@ export default function ProfilePage() {
   }
 
   if (isLoading) return <Skeleton rows={5} />;
-  if (error || !data) return <p role="alert" className="text-danger">Could not load your profile. Please refresh.</p>;
+  if (error || !data) return <Notice kind="err">Could not load your profile. Please refresh.</Notice>;
   const empty = Object.keys(data.items).length === 0;
 
   return (
     <div className="grid max-w-4xl gap-6">
-      <header>
+      <header className="grid gap-1">
         <h1>Master Career Profile</h1>
         <p className="text-sm text-muted">The single source of truth for resumes and messages. Nothing is added to a resume unless it is here.</p>
         <div className="mt-2" role="meter" aria-valuenow={data.completeness.score} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completeness">
-          <div className="h-2 w-full rounded bg-surface-3"><div className="h-2 rounded bg-ok" style={{ width: `${data.completeness.score}%` }} /></div>
+          <div className="h-2 w-full overflow-hidden rounded bg-surface-3"><div className="h-2 rounded bg-accent" style={{ width: `${data.completeness.score}%`, transition: "width .7s var(--ease)" }} /></div>
           <p className="mt-1 text-xs">{data.completeness.score}% complete{data.completeness.missing.length ? ` · missing: ${data.completeness.missing.join(", ")}` : ""}</p>
         </div>
       </header>
 
-      <section aria-labelledby="add" className="grid gap-4 rounded border p-4">
-        <h2 id="add" className="font-medium">Add information</h2>
+      <section aria-labelledby="add" className="card grid gap-4 p-4">
+        <h2 id="add" className="eyebrow">Add information</h2>
         <label className="grid gap-1 text-sm">Resume (PDF or DOCX, up to 5 MB)
-          <input type="file" accept=".pdf,.docx" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) act(() => upload<Task>("/resumes", f), "Resume parsed"); e.target.value = ""; }} />
+          <Dropzone hint="Drag it here or choose a file"><input type="file" accept=".pdf,.docx" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) act(() => upload<Task>("/resumes", f), "Resume parsed"); e.target.value = ""; }} /></Dropzone>
         </label>
         {(["github", "portfolio"] as const).map((k) => (
           <div key={k} className="grid gap-2 text-sm">
@@ -74,22 +78,22 @@ export default function ProfilePage() {
             )}
           </div>
         ))}
-        {msg && <p role="status" className="text-sm">{msg}</p>}
+        {msg && <Notice>{msg}</Notice>}
         {lastResume && <p className="text-sm"><Link className="underline" href={`/profile/resume/${lastResume}`}>Compare extracted data with your original resume</Link></p>}
       </section>
 
       {data.questions.length > 0 && (
-        <section aria-labelledby="qs" className="rounded border border-warn bg-warn-weak p-4">
-          <h2 id="qs" className="font-medium">Needs your attention ({data.questions.length})</h2>
+        <section aria-labelledby="qs" className="notice notice-warn !p-4">
+          <h2 id="qs" className="eyebrow !text-warn">Needs your attention ({data.questions.length})</h2>
           <ul className="mt-2 list-disc pl-5 text-sm">{data.questions.map((q, i) => <li key={i}>{q.text}</li>)}</ul>
         </section>
       )}
 
-      {empty && <p className="text-sm text-muted">Your profile is empty. Upload a resume above, or add details by hand once the profile has a section to edit.</p>}
+      {empty && <EmptyState icon={UserRound} title="Your profile is empty" sub="Upload a resume above, or add details by hand once the profile has a section to edit." />}
 
       {ORDER.filter((s) => data.items[s]).map((s) => (
         <section key={s} aria-labelledby={`h-${s}`}>
-          <h2 id={`h-${s}`} className="mb-2 font-medium">{LABEL[s]}</h2>
+          <h2 id={`h-${s}`} className="eyebrow mb-2">{LABEL[s]}</h2>
           <ul className="grid gap-2">{data.items[s].map((i) => <ItemCard key={i.id} item={i} onChange={() => mutate()} />)}</ul>
         </section>
       ))}

@@ -4,6 +4,10 @@ import { useState } from "react";
 import useSWR from "swr";
 import Pager from "@/components/Pager";
 import StatusBadge from "@/components/StatusBadge";
+import { Briefcase } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
+import Notice from "@/components/ui/Notice";
+import PageHeader from "@/components/ui/PageHeader";
 import Skeleton from "@/components/ui/Skeleton";
 import { api, settle } from "@/lib/api";
 
@@ -22,6 +26,7 @@ export default function JobsPage() {
   const [status, setStatus] = useState("");
   const [hasContacts, setHasContacts] = useState("");
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [cands, setCands] = useState<Cand[]>([]);
   const [bf, setBf] = useState({ company: "", ats: "greenhouse", token: "", board_url: "" });
@@ -32,26 +37,24 @@ export default function JobsPage() {
   const runs = useSWR<Run[]>("/jobs/discovery-runs", (p: string) => api<Run[]>(p));
 
   async function run(label: string, fn: () => Promise<unknown>) {
-    setBusy(true); setMsg("");
-    try { await fn(); setMsg(label); } catch (e) { setMsg((e as Error).message); } finally { setBusy(false); jobs.mutate(); boards.mutate(); runs.mutate(); }
+    setBusy(true); setMsg(""); setErr("");
+    try { await fn(); setMsg(label); } catch (e) { setErr((e as Error).message); } finally { setBusy(false); jobs.mutate(); boards.mutate(); runs.mutate(); }
   }
   const last = runs.data?.[0];
 
   return (
     <div className="grid gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-2">
-        <div><h1>Jobs</h1>
-          <p className="text-sm text-muted">Only roles listed as open by the company&apos;s own job board count as verified. Everything else is shown with the reason it is uncertain.</p></div>
-        <div className="flex gap-2 text-sm">
+      <PageHeader title="Jobs" sub="Only roles listed as open by the company's own job board count as verified. Everything else is shown with the reason it is uncertain."
+        actions={<div className="flex gap-2 text-sm">
           <button disabled={busy} className="rounded bg-black px-3 py-1.5 text-white disabled:opacity-50" onClick={() => run("Discovery finished.", async () => settle(await api<{ task_id: string; status: string }>("/jobs/discover", { body: {} })))}>Find jobs on my boards</button>
           <button disabled={busy} className="rounded border px-3 py-1.5 disabled:opacity-50" onClick={() => run("Stale jobs re-checked.", async () => settle(await api<{ task_id: string; status: string }>("/jobs/verify-stale", { body: {} })))}>Re-check stale jobs</button>
-        </div>
-      </header>
-      {msg && <p role="status" className="text-sm">{msg}</p>}
+        </div>} />
+      {msg && <Notice kind="ok">{msg}</Notice>}
+      {err && <Notice kind="err">{err}</Notice>}
 
       {last && (
-        <section aria-labelledby="cov" className="rounded border p-3 text-sm">
-          <h2 id="cov" className="font-medium">Coverage of the last run</h2>
+        <section aria-labelledby="cov" className="card grid gap-1 p-4 text-sm">
+          <h2 id="cov" className="eyebrow">Coverage of the last run</h2>
           <p>{last.summary.reachable} of {last.summary.boards} boards reachable · {last.summary.jobs_seen} jobs seen · {last.summary.new_jobs} new.
             {last.summary.contact_companies_without_reachable_board > 0 && <> {last.summary.contact_companies_without_reachable_board} of the {last.summary.contact_companies} companies you know people at have <strong>no reachable job board</strong>, so their jobs are not covered.</>}</p>
           <ul className="mt-1 list-disc pl-5">{last.coverage.filter((c) => !c.reachable).map((c, i) => <li key={i}>{c.company} ({c.ats}): {c.error}</li>)}</ul>
@@ -96,7 +99,7 @@ export default function JobsPage() {
         <label>People I know there <select className="rounded border px-1 py-1" value={hasContacts} onChange={(e) => { setHasContacts(e.target.value); setPage(1); }}><option value="">any</option><option value="true">yes</option><option value="false">no</option></select></label>
       </div>
       {jobs.isLoading && <Skeleton rows={5} />}
-      {jobs.data?.items.length === 0 && <p className="text-sm text-muted">No jobs yet. Add a job board above and press “Find jobs”, or add a job by link.</p>}
+      {jobs.data?.items.length === 0 && <EmptyState icon={Briefcase} title="No jobs yet" sub="Add a job board above and press “Find jobs”, or add a job by link." />}
       {jobs.data && jobs.data.items.length > 0 && (
         <>
           <div className="overflow-auto"><table className="min-w-full border text-sm"><caption className="sr-only">Jobs</caption>
