@@ -273,7 +273,11 @@ def _parse_project(e) -> Item | None:
     name = re.split(r"\s+[—–|]\s+|\s+-\s+|\s*\(", header)[0].strip(" :-")
     blob = " ".join(e["header"] + e["bullets"])
     urls = URL.findall(blob)
-    stack = sorted({c for c, _ in taxonomy.find_skills(blob)})
+    stack = {c for c, _ in taxonomy.find_skills(blob)}
+    for line in e["header"]:  # a tech-tag line ("FastAPI · React · SQLAlchemy"): keep the tags even when the taxonomy doesn't know them
+        if "·" in line:
+            stack |= {taxonomy.normalize(t) or t.strip() for t in line.split("·") if 0 < len(t.strip()) <= 30}
+    stack = sorted(stack)
     data = {"name": name, "description": e["bullets"], "stack": stack,
             "repo_url": next((u for u in urls if "github.com" in u.lower()), None),
             "demo_url": next((u for u in urls if "github.com" not in u.lower()), None),
