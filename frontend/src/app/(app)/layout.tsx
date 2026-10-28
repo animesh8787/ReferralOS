@@ -27,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [palette, setPalette] = useState(false);
   const [narrow, setNarrow] = useState(false);
+  const [resent, setResent] = useState("");
   const menuBtn = useRef<HTMLButtonElement>(null);
   useEffect(() => { if (error) router.replace("/login"); }, [error, router]);
   useEffect(() => { setOpen(false); }, [path]);
@@ -89,7 +90,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span className="flex items-center gap-2"><Search size={14} strokeWidth={1.6} aria-hidden="true" />Search or jump to…</span><kbd className="field-label hidden sm:inline">Ctrl K</kbd>
             </button>
           </div>
-          {me && !me.email_verified && <div className="px-4 pt-4 md:px-6"><Notice kind="warn">Your email is not verified yet. Some features stay locked until it is.</Notice></div>}
+          {me && !me.email_verified && <div className="px-4 pt-4 md:px-6"><Notice kind="warn">Your email is not verified yet. Some features stay locked until it is. {resent || <button type="button" className="underline" onClick={async () => { try { await api("/auth/resend-verification", { body: {} }); setResent("Verification email sent, check your inbox."); } catch (e) { setResent((e as Error).message); } }}>Resend verification email</button>}</Notice></div>}
           <main id="main" className="px-4 py-5 md:px-6">
             <div className="page">{me ? children : <Skeleton rows={6} />}</div>
           </main>

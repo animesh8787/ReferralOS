@@ -1,7 +1,7 @@
 """Background task handlers for the profile: resume parsing, GitHub import, portfolio import."""
 from ..adapters import github_api
 from ..adapters.http import FetchError, PoliteFetcher, make_client
-from ..models.profile import Resume
+from ..models.profile import ProfileItem, Resume
 from ..tasks import handler
 from . import portfolio, profile, resume_parse
 from .. import storage
@@ -22,6 +22,9 @@ def parse_resume(ctx):
     items, report = resume_parse.structure(text)
     r.status, r.parse_info = "parsed", {**info, **report}
     ctx.update(progress=0.7)
+    # a re-upload replaces what earlier resume imports added and the user has not confirmed or edited (edits become source "manual")
+    ctx.db.query(ProfileItem).filter(ProfileItem.source == "resume", ProfileItem.verified.is_(False),
+                                     ProfileItem.status.in_(("active", "suggested"))).delete(synchronize_session=False)
     res = profile.add_parsed(ctx.db, items, "resume", r.id)
     profile.snapshot(ctx.db, f"Imported resume {r.filename}")
     return {**res, "rejected": len(report["rejected"])}

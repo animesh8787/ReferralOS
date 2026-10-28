@@ -16,6 +16,8 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", url)
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     monkeypatch.setenv("TASKS_INLINE", "1")
+    monkeypatch.setenv("ADAPTER_MODE", "mock")  # tests never touch the network
+    monkeypatch.setenv("RESEND_API_KEY", "")
     get_settings.cache_clear()
     reset_engine()
     ratelimit.reset()

@@ -15,11 +15,14 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     session_hours: int = 24 * 7
     tasks_inline: bool = False  # tests/dev: run background tasks synchronously
-    adapter_mode: str = "mock"  # mock | real
+    adapter_mode: str = "real"  # real | mock (mock = offline fixtures: fake GitHub/job boards/Gmail)
     google_client_id: str = ""  # Gmail OAuth app (optional; unset = mock mode only)
     google_client_secret: str = ""
     cors_origins: list[str] = ["http://localhost:3000"]
     require_email_verification: bool = True
+    resend_api_key: str = ""  # empty = system mail goes to data/outbox only
+    mail_from: str = "ReferralOS <onboarding@resend.dev>"  # resend.dev only delivers to the Resend account owner until a domain is verified
+    app_url: str = "http://localhost:3000"  # base of the links in system mail
     # hard maximums for outbound email, below the published Gmail limits
     hard_max_daily_emails: int = 100
     hard_max_per_company_daily: int = 20

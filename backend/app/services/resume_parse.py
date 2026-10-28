@@ -52,6 +52,11 @@ def _pdf(data: bytes) -> tuple[str, dict]:
         info["image_only"] = True
         info["warnings"].append("No selectable text found. This looks like a scanned/image-only PDF; OCR is not "
                                 "available, so please enter your details manually or upload a text-based file.")
+        return text, info
+    # header icons/words are hyperlinks: the visible text says only "GitHub", the URL lives in the annotation
+    uris = list(dict.fromkeys(l["uri"] for page in doc for l in page.get_links() if l.get("uri")))
+    if uris:
+        text += "\nLINKS\n" + "\n".join(uris)
     return text, info
 
 
@@ -98,13 +103,15 @@ def _docx(data: bytes) -> tuple[str, dict]:
 SECTIONS = {
     "education": ["education", "academic background", "academics"],
     "experience": ["experience", "work experience", "professional experience", "employment", "internships",
-                   "internship experience", "work history"],
+                   "internship experience", "work history", "research experience", "relevant experience",
+                   "industry experience", "leadership experience", "teaching experience"],
     "projects": ["projects", "personal projects", "academic projects", "selected projects", "key projects"],
     "skills": ["skills", "technical skills", "skills & tools", "core competencies", "technologies", "tech stack"],
     "certifications": ["certifications", "certificates", "licenses", "licenses & certifications"],
     "awards": ["awards", "honors", "honours", "achievements", "honors & awards", "awards & achievements"],
     "publications": ["publications"],
     "summary": ["summary", "profile", "objective", "about me", "professional summary"],
+    "links": ["links"],  # appended by _pdf from hyperlink annotations; read only by parse_personal
 }
 _HEAD = {a: k for k, v in SECTIONS.items() for a in v}
 MONTH = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
@@ -274,39 +281,90 @@ def _parse_project(e) -> Item | None:
     return Item("project", data, (e["start"], e["end"]), 0.7)
 
 
-def _parse_skills(lines) -> list[Item]:
-    items = []
-    for line, off in lines:
-        s = line.strip().lstrip(BULLETS).strip()
+def _split_top(text: str) -> list[str]:
+    """Split on , ; | and bullets, but not inside parentheses."""
+    out, buf, depth = [], "", 0
+    for ch in text:
+        depth += (ch == "(") - (ch == ")" and depth > 0)
+        if depth == 0 and ch in ",;|•·":
+            out.append(buf)
+            buf = ""
+        else:
+            buf += ch
+    return out + [buf]
+
+
+def _skill_groups(lines) -> list[tuple[str | None, str, int, int]]:
+    """-> [(category, text, start, end)]. A short comma-less line followed by a list is a category label (PDF tables put it on its
+    own line); a line that ends with ',' or '-', leaves a parenthesis open, or completes a known skill with the next word continues."""
+    rows = [(l.strip().lstrip(BULLETS).strip(), o, o + len(l)) for l, o in lines if l.strip()]
+    groups, k = [], 0
+    while k < len(rows):
+        t, a, b = rows[k]
         cat = None
-        if ":" in s[:30]:
-            cat, s = (x.strip() for x in s.split(":", 1))
-        for tok in re.split(r"[,;|•·]", s):
+        if ":" in t[:30]:
+            cat, t = (x.strip() for x in t.split(":", 1))
+        elif k + 1 < len(rows) and len(t) <= 35 and not re.search(r"[,;(]", t) and rows[k + 1][0].count(",") >= 2:
+            cat, k = t, k + 1
+            t, _, b = rows[k]
+        while k + 1 < len(rows):
+            nxt = rows[k + 1][0]
+            last = _split_top(t)[-1].strip()
+            first = nxt.split(",")[0].strip()
+            if t.endswith("-"):
+                t, k, b = t + nxt, k + 1, rows[k + 1][2]
+            elif t.endswith(",") or t.count("(") > t.count(")") or taxonomy.normalize(f"{last} {first}"):
+                t, k, b = f"{t} {nxt}", k + 1, rows[k + 1][2]
+            else:
+                break
+        groups.append((cat, t, a, b))
+        k += 1
+    return groups
+
+
+def _parse_skills(lines) -> list[Item]:
+    items, seen = [], set()
+    for cat, text, a, b in _skill_groups(lines):
+        for tok in _split_top(text):
             tok = tok.strip().strip(".")
-            if not tok or len(tok) > 40:
-                continue
-            canon = taxonomy.normalize(tok)
-            items.append(Item("skill", {"name": canon or tok, "category": taxonomy.category(canon) if canon else (cat or "other").lower(),
-                                        "raw": tok}, (off, off + len(line)), 0.9 if canon else 0.6))
+            names = [tok]
+            m = re.fullmatch(r"(.+?)\s*\((.*)\)", tok)
+            if m and "," in m.group(2):  # "AWS (Lambda, SQS)" is AWS plus each service
+                names = [m.group(1)] + [x.strip() for x in m.group(2).split(",")]
+            elif m and taxonomy.normalize(m.group(1)):  # "DynamoDB (single-table design)" is DynamoDB
+                names = [m.group(1)]
+            for n in names:
+                n = n.strip().strip(".")
+                canon = taxonomy.normalize(n)
+                key = (canon or n).lower()
+                if not n or len(n) > 40 or key in seen:
+                    continue
+                seen.add(key)
+                items.append(Item("skill", {"name": canon or n, "category": taxonomy.category(canon) if canon else (cat or "other").lower(),
+                                            "raw": n}, (a, b), 0.9 if canon else 0.6))
     return items
 
 
 def _simple_lines(section: str, lines) -> list[Item]:
-    return [Item(section, {"name": l.strip().lstrip(BULLETS).strip()}, (o, o + len(l)), 0.7) for l, o in lines if l.strip()]
+    items = []
+    for e in split_entries(lines):
+        names = [h for h in e["header"]] if not e["bullets"] else e["header"] + e["bullets"]
+        items += [Item(section, {"name": n}, (e["start"], e["end"]), 0.7) for n in names if n.strip()]
+    return items
 
 
-def parse_personal(head, text: str) -> Item | None:
+def parse_personal(head, text: str, links_text: str = "") -> Item | None:
     data = {"name": None, "email": None, "phone": None, "location": None, "links": []}
     for line, _ in head:
         s = line.strip()
         if data["name"] is None and s and not EMAIL.search(s) and not URL.search(s) and not PHONE.search(s) \
                 and re.fullmatch(r"[A-Za-z][A-Za-z.'\- ]{2,40}", s) and 2 <= len(s.split()) <= 4:
             data["name"] = s
-    em = EMAIL.search(text[:600])
+    em = EMAIL.search(text[:600] + " " + links_text)
     data["email"] = em.group(0) if em else None
     ph = PHONE.search(text[:600])
     data["phone"] = ph.group(0).strip() if ph else None
-    data["links"] = sorted(set(u.rstrip(".,") for u in URL.findall(text[:800])))
+    data["links"] = sorted(set(u.rstrip(".,") for u in URL.findall(text[:800] + " " + links_text)))
     if not any(data.values()):
         return None
     return Item("personal", data, (0, min(len(text), 600)), 0.7)
@@ -338,10 +396,13 @@ def assign_evidence(items: list[Item]) -> None:
             proj |= set(it.data.get("stack", []))
         elif it.section == "education":
             studied |= taxonomy.skill_set(" ".join(it.data.get("coursework", [])))
+    ptext = " ".join(_norm(" ".join(map(str, it.data.get("bullets", []))) + " " + str(it.data.get("title") or "")) for it in items if it.section == "experience")
+    jtext = " ".join(_norm(" ".join(map(str, it.data.get("description", []))) + " " + str(it.data.get("name") or "")) for it in items if it.section == "project")
     for it in items:
         if it.section == "skill":
             n = it.data["name"]
-            it.evidence_level = ("USED_PROFESSIONALLY" if n in prof else "USED_IN_PROJECT" if n in proj
+            word = re.compile(rf"(?<![\w]){re.escape(_norm(n))}(?![\w])")
+            it.evidence_level = ("USED_PROFESSIONALLY" if n in prof or word.search(ptext) else "USED_IN_PROJECT" if n in proj or word.search(jtext)
                                  else "STUDIED" if n in studied else "CLAIMED_ONLY")
 
 
@@ -361,7 +422,7 @@ def structure(text: str) -> tuple[list[Item], dict]:
     """-> (items, report). report: rejected (untraceable), sections found."""
     head, sections = split_sections(text)
     items: list[Item] = []
-    p = parse_personal(head, text)
+    p = parse_personal(head, text, " ".join(l for l, _ in sections.get("links", [])))
     if p:
         items.append(p)
     for e in split_entries(sections.get("experience", [])):

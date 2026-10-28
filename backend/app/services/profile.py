@@ -106,9 +106,11 @@ def questions(items: list[ProfileItem]) -> list[dict]:
         if i.section == "experience" and not _has_number(d.get("bullets", [])) and not d.get("metrics"):
             qs.append({"item_id": i.id, "type": "missing_metric",
                        "text": f"Your role '{d.get('title')}' at {d.get('organization')} lists no measurable results. Do you have any numbers?"})
-        if i.section == "skill" and i.evidence_level == "CLAIMED_ONLY":
-            qs.append({"item_id": i.id, "type": "unsupported_skill",
-                       "text": f"You list {d.get('name')}, but no project or job shows it. Where did you use it? Until then it won't be featured."})
+    listed = [i.data.get("name") for i in act if i.section == "skill" and i.evidence_level == "CLAIMED_ONLY"]
+    if listed:  # one question, not one per skill
+        more = f" and {len(listed) - 8} more" if len(listed) > 8 else ""
+        qs.append({"item_id": None, "type": "unsupported_skill",
+                   "text": f"{len(listed)} skills appear only in your skills list ({', '.join(listed[:8])}{more}). Where did you use them? Until a project or job shows a skill it won't be featured."})
     for i in items:
         for f in i.flags or []:
             if f.get("type") in ("conflict", "date_order", "duplicate"):

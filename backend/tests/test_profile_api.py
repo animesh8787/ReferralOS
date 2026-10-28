@@ -38,18 +38,32 @@ def test_original_file_is_stored_immutably(env, mk):
     assert hashlib.sha256(data).hexdigest() == a.get(f"/api/resumes/{rid}").json().get("sha256", hashlib.sha256(data).hexdigest())
 
 
-def test_reupload_same_resume_adds_nothing(env, mk):
+def test_reupload_same_resume_does_not_duplicate(env, mk):
     a = mk("a@example.com")
     a.upload(sr.pdf_single())
     n = {s: len(v) for s, v in a.get("/api/profile").json()["items"].items()}
-    r2 = a.upload(sr.pdf_single()).json()
-    assert r2["result"]["added"] == 0
+    a.upload(sr.pdf_single())
     assert {s: len(v) for s, v in a.get("/api/profile").json()["items"].items()} == n
+
+
+def test_reupload_replaces_unconfirmed_but_keeps_confirmed(env, mk):
+    a = mk("a@example.com")
+    a.upload(sr.pdf_single())
+    items = a.get("/api/profile").json()["items"]
+    keep = items["experience"][0]
+    assert a.post(f"/api/profile/items/{keep['id']}/confirm", {}).status_code == 200
+    drop = items["project"][0]["id"]  # never confirmed
+    a.upload(sr.pdf_single())
+    after = a.get("/api/profile").json()["items"]
+    assert keep["id"] in [i["id"] for i in after["experience"]]
+    assert drop not in [i["id"] for i in after["project"]] and len(after["project"]) == len(items["project"])
 
 
 def test_changed_resume_flags_conflict_instead_of_overwriting(env, mk):
     a = mk("a@example.com")
     a.upload(sr.pdf_single())
+    for i in a.get("/api/profile").json()["items"]["experience"]:  # only what the user confirmed is protected from a re-upload
+        a.post(f"/api/profile/items/{i['id']}/confirm", {})
     changed = [l.replace("Jun 2024 - Aug 2024", "Jun 2024 - Dec 2024") for l in sr.LINES]
     a.upload(sr.pdf_single(changed))
     prof = a.get("/api/profile").json()

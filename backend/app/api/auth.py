@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .. import ratelimit
 from ..adapters.mailer import send_system_mail
 from ..audit import audit
+from ..config import get_settings
 from ..models.core import AuthSession, EmailToken, User
 from ..security import (check_password_policy, create_session, current_user, get_db, hash_password, new_token,
                         set_auth_cookies, sha, verify_password)
@@ -57,6 +58,12 @@ def _issue(db: Session, user: User, kind: str, hours: int) -> str:
     return raw
 
 
+def _send_verification(db: Session, u: User) -> None:
+    tok = _issue(db, u, "verify", 48)
+    link = f"{get_settings().app_url}/verify?token={tok}"
+    send_system_mail(u.email, "Verify your ReferralOS email", f"Open this link to verify your email:\n{link}\n\nVerification token: {tok}")
+
+
 def _public(u: User) -> dict:
     return {"id": u.id, "email": u.email, "display_name": u.display_name, "role": u.role,
             "email_verified": u.email_verified}
@@ -72,8 +79,7 @@ def signup(body: Signup, request: Request, db: Session = Depends(get_db)):
     u = User(email=email, password_hash=hash_password(body.password), display_name=body.display_name[:200])
     db.add(u)
     db.flush()
-    tok = _issue(db, u, "verify", 48)
-    send_system_mail(email, "Verify your ReferralOS email", f"Verification token: {tok}")
+    _send_verification(db, u)
     audit(db, u.id, "signup")
     return _public(u)
 
@@ -119,13 +125,24 @@ def me(user: User = Depends(current_user)):
     return _public(user)
 
 
+@router.post("/resend-verification", status_code=202)
+def resend_verification(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    ratelimit.check(f"resend:{user.id}", 3, 3600)
+    if user.email_verified:
+        raise HTTPException(409, "Your email is already verified")
+    _send_verification(db, db.get(User, user.id))
+    audit(db, user.id, "verification_resent")
+    return {"ok": True}
+
+
 @router.post("/forgot", status_code=202)
 def forgot(body: Forgot, request: Request, db: Session = Depends(get_db)):
     ratelimit.check(f"forgot:{_ip(request)}", 5, 3600)
     u = db.query(User).filter(User.email == body.email.strip().lower()).first()
     if u:  # same response either way: no account enumeration
         tok = _issue(db, u, "reset", 1)
-        send_system_mail(u.email, "Reset your ReferralOS password", f"Reset token: {tok}")
+        link = f"{get_settings().app_url}/reset?token={tok}"
+        send_system_mail(u.email, "Reset your ReferralOS password", f"Open this link to choose a new password:\n{link}\n\nReset token: {tok}")
         audit(db, u.id, "password_reset_requested")
     return {"ok": True}
 

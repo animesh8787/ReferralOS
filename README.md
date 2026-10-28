@@ -10,7 +10,7 @@ It is built around three promises: **never invent** (every resume or message cla
 
 ## What works fully offline (no accounts, no keys)
 Resume parsing (PDF/DOCX), profile with provenance, LinkedIn/HR CSV import and cleaning, ranking and scoring, job analysis and requirement matrices, resume tailoring and PDF/DOCX/TXT output, drafting, review/approval, manual sending (`.eml`, `mailto:`, copy buttons), tracking, export, deletion.
-A deterministic mock mode (`ADAPTER_MODE=mock`, the default) simulates GitHub, job boards and Gmail so the whole workflow can be tried without touching any real service.
+`ADAPTER_MODE=real` is the default. A deterministic mock mode (`ADAPTER_MODE=mock`, used by the tests) simulates GitHub, job boards and Gmail so the whole workflow can be tried without touching any real service.
 
 ## What needs something outside
 | Feature | Needs |
@@ -41,7 +41,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000/signup. In development the verification email is written to `data/outbox/*.json` (the `body` holds the token; paste it at `/verify`).
+Open http://localhost:3000/signup. Verification and reset emails are sent through [Resend](https://resend.com) when `RESEND_API_KEY` is set in `backend/.env` (with the default sender `onboarding@resend.dev` Resend only delivers to your own Resend account address; verify a domain and set `MAIL_FROM` to mail anyone else). Without a key, or if Resend fails, they are written to `data/outbox/*.json` (the `body` holds the link and token). Signed-in users can press *Resend verification email* in the banner.
 To run without a worker process (development only; tasks then run inside the request and sending pacing is not realistic), start the API with `TASKS_INLINE=1`.
 
 ### With Docker (PostgreSQL + API + worker + web)
@@ -52,7 +52,7 @@ docker compose up --build
 Production notes: persistent volumes for `pgdata` and `userdata` (uploads and generated files), at least one `worker`, TLS at a reverse proxy, `COOKIE_SECURE=true`, a real `APP_KEK` from a secrets manager, and replace the development mailer before exposing sign-up publicly.
 
 ## Configuration (`.env`, placeholders only in `.env.example`)
-`DATABASE_URL` (SQLite by default, PostgreSQL for multi-user) · `DATA_DIR` · `APP_KEK` · `COOKIE_SECURE` · `ADAPTER_MODE` (`mock`/`real`) · `CORS_ORIGINS` · `GOOGLE_CLIENT_ID/SECRET` · `TASKS_INLINE` · `HARD_MAX_DAILY_EMAILS`, `HARD_MAX_PER_COMPANY_DAILY`.
+`DATABASE_URL` (SQLite by default, PostgreSQL for multi-user) · `DATA_DIR` · `APP_KEK` · `COOKIE_SECURE` · `ADAPTER_MODE` (`real`/`mock`) · `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL` · `CORS_ORIGINS` · `GOOGLE_CLIENT_ID/SECRET` · `TASKS_INLINE` · `HARD_MAX_DAILY_EMAILS`, `HARD_MAX_PER_COMPANY_DAILY`.
 
 ## Using it (the guided setup at `/onboarding` walks through this)
 1. **Profile** — upload a PDF/DOCX resume (or enter details by hand). Compare what was extracted with the original, confirm or fix entries. Optionally allow and fetch GitHub/portfolio suggestions (they stay *suggestions* until you confirm them).
