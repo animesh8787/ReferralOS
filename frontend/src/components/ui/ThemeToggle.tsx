@@ -11,9 +11,8 @@ function read(): Mode {
 
 export function applyTheme(m: Mode) {
   const dark = m === "dark" || (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-  if (m === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = m;
-  if (m === "system" && dark) document.documentElement.dataset.theme = "dark";
-  try { m === "system" ? localStorage.removeItem("referralos-theme") : localStorage.setItem("referralos-theme", m); } catch { /* private mode: theme just isn't remembered */ }
+  if (dark) document.documentElement.dataset.theme = "dark"; else document.documentElement.removeAttribute("data-theme");
+  try { if (m === "system") localStorage.removeItem("referralos-theme"); else localStorage.setItem("referralos-theme", m); } catch { /* private mode: the choice just isn't remembered */ }
 }
 
 export default function ThemeToggle() {
@@ -27,9 +26,8 @@ export default function ThemeToggle() {
   }, []);
   const Icon = mode === "light" ? Sun : mode === "dark" ? Moon : Monitor;
   return (
-    <button type="button" className="btn" aria-label={`Theme: ${mode}. Switch theme`} title={`Theme: ${mode}`}
-      onClick={() => { const n = NEXT[mode]; setMode(n); applyTheme(n); }}>
-      <Icon size={15} strokeWidth={1.6} aria-hidden="true" />
+    <button type="button" className="btn" aria-label={`Theme: ${mode}. Switch theme`} title={`Theme: ${mode}`} onClick={() => { const n = NEXT[mode]; setMode(n); applyTheme(n); }}>
+      <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
     </button>
   );
 }

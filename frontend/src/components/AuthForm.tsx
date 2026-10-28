@@ -47,7 +47,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4">
-      <Link href="/" className="text-lg font-semibold no-underline">ReferralOS</Link>
+      <Link href="/" className="brand !p-0">ReferralOS</Link>
       <h1>{mode === "login" ? "Sign in to ReferralOS" : "Create your account"}</h1>
       {firebaseEnabled && (
         <button type="button" disabled={busy} className="btn" onClick={() => run(async () => exchange((await signInWithPopup(fbAuth(), new GoogleAuthProvider())).user))}>

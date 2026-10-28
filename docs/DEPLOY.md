@@ -70,3 +70,6 @@ Sign-in does **not** need this. Sending mail through a user's Gmail does.
 - **SQLite is for local use only.** Production uses Postgres.
 - **Account deletion** removes ReferralOS data only. The shared Firebase sign-in remains, so Nexus OS keeps working.
 - **Secrets rotation:** the Supabase service key, `APP_KEK` and the Google client secret live only in the Render dashboard.
+
+## Note on migrations
+After pulling changes run `uv run alembic upgrade head` in `backend` before restarting the API (migrations 0010 and 0011 add columns; skipping this makes sign-in fail with a 500).

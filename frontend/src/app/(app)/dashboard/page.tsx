@@ -16,7 +16,7 @@ export default function Dashboard() {
   if (isLoading) return <Skeleton rows={8} />;
   if (error || !d) return <Notice kind="err">Could not load the dashboard.</Notice>;
   const max = Math.max(1, ...d.funnel.map((f) => f.count));
-  const stat = (label: string, v: number | string, href?: string) => <div className="grid content-between gap-1"><dt className="text-muted">{label}</dt><dd className="text-3xl">{href ? <Link className="no-underline hover:underline" href={href}>{v}</Link> : v}</dd></div>;
+  const stat = (label: string, v: number | string, href?: string) => <div className="grid content-between gap-1"><dt className="text-muted">{label}</dt><dd>{href ? <Link className="no-underline hover:underline" href={href}>{v}</Link> : v}</dd></div>;
   return (
     <div className="grid gap-6">
       <div className="grid gap-3"><PageHeader title="Dashboard" />

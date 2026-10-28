@@ -35,8 +35,8 @@ function Inner({ mode }: { mode: Mode }) {
     } catch (x) { setErr(firebaseEnabled ? fbMessage(x) : (x as Error).message); }
   }
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4 view-enter">
-      <Link href="/" className="brand !p-0">Referral<em>OS</em></Link>
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4">
+      <Link href="/" className="brand !p-0">ReferralOS</Link>
       <h1>{c.title}</h1>
       <form onSubmit={submit} className="card flex flex-col gap-3 p-5">
         {mode !== "forgot" && <label className="flex flex-col gap-1 text-sm font-medium">Token from your email<input  required value={token} onChange={(e) => setToken(e.target.value)} /></label>}

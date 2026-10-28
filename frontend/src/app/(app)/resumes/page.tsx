@@ -19,7 +19,7 @@ export default function Resumes() {
       {error && <Notice kind="err">Could not load resumes.</Notice>}
       {data?.length === 0 && <EmptyState icon={FileText} title="No tailored resumes yet" sub="Open a job and choose “Tailor my resume”." />}
       <ul className="grid gap-2">{data?.map((v) => (
-        <li key={v.id} className="card glare grid gap-1 p-3"><Link className="font-medium underline" href={`/resumes/${v.id}`}>{v.job_title} · version {v.version}</Link>
+        <li key={v.id} className="card grid gap-1 p-3"><Link className="font-medium underline" href={`/resumes/${v.id}`}>{v.job_title} · version {v.version}</Link>
           <span className={`badge ml-2 ${v.status === "approved" ? "badge-ok" : "badge-muted"}`}>{v.status}</span>
           <p>Alignment estimate {v.score.toFixed(0)}/100{v.needs_confirmation > 0 && <span className="text-warn"> · {v.needs_confirmation} claim(s) need your confirmation</span>}{!v.render_ok && <span className="text-danger"> · render check failed</span>}</p></li>))}</ul>
     </div>

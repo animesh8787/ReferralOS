@@ -34,7 +34,7 @@ export default function Onboarding() {
 
   return (
     <div className="grid max-w-2xl gap-4 text-sm">
-      <header className="grid gap-1"><p className="eyebrow">Setup</p><h1>Let&apos;s set you up</h1><p className="text-muted">Every step except having some profile information can be skipped, and you can come back later.</p>
+      <header className="grid gap-1"><h1>Let&apos;s set you up</h1><p className="text-muted">Every step except having some profile information can be skipped, and you can come back later.</p>
         <ol className="mt-2 flex flex-wrap gap-2" aria-label="Setup steps">{STEPS.map(([k, l], i) => <li key={k}><button aria-current={step === k ? "step" : undefined} className={`rounded border px-2 py-1 text-xs ${step === k ? "bg-black text-white" : i < idx ? "bg-ok-weak" : ""}`} onClick={() => go(k)}>{i + 1}. {l}{onb?.skipped.includes(k) && " (skipped)"}</button></li>)}</ol></header>
       {msg && <Notice>{msg}</Notice>}
 
