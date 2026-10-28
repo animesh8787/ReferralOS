@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     app_kek: str = ""  # base64 32-byte key-encryption key; dev falls back to data/.kek
     cookie_secure: bool = False
     session_hours: int = 24 * 7
+    run_worker: bool = False  # run the task worker as a thread inside the API process (free hosts have no background workers)
     tasks_inline: bool = False  # tests/dev: run background tasks synchronously
     adapter_mode: str = "real"  # real | mock (mock = offline fixtures: fake GitHub/job boards/Gmail)
     google_client_id: str = ""  # Gmail OAuth app (optional; unset = mock mode only)

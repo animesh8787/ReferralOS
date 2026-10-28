@@ -1,4 +1,6 @@
 import logging
+import threading
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -12,7 +14,18 @@ from .crypto import install_log_redaction
 
 install_log_redaction()
 
-app = FastAPI(title="ReferralOS API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """RUN_WORKER=1: process background tasks in this process. Claims are atomic, so a separate worker can run alongside later."""
+    stop = threading.Event()
+    if get_settings().run_worker:
+        from .tasks import worker_loop
+        threading.Thread(target=worker_loop, kwargs={"stop": stop.is_set}, daemon=True, name="task-worker").start()
+    yield
+    stop.set()
+
+
+app = FastAPI(title="ReferralOS API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=get_settings().cors_origins, allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 

@@ -18,7 +18,8 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setenv("TASKS_INLINE", "1")
     monkeypatch.setenv("ADAPTER_MODE", "mock")  # tests never touch the network
     monkeypatch.setenv("RESEND_API_KEY", "")
-    for k in ("SUPABASE_URL", "FIREBASE_PROJECT_ID", "RUN_WORKER"):  # a developer's .env must not change what tests do
+    monkeypatch.setenv("RUN_WORKER", "0")
+    for k in ("SUPABASE_URL", "FIREBASE_PROJECT_ID"):  # a developer's .env must not change what tests do
         monkeypatch.setenv(k, "")
     get_settings.cache_clear()
     reset_engine()
