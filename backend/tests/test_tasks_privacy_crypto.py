@@ -92,7 +92,8 @@ def test_delete_account_is_complete(env, mk):
             assert db.execute(select(func.count()).select_from(t).where(t.c.user_id == ua)).scalar() == 0, t.name
     assert db.query(User).filter(User.id == ua).count() == 0
     assert db.query(User).count() == 1  # the other user survives
-    assert not storage.user_dir(ua).exists()
+    with pytest.raises(FileNotFoundError):
+        storage.get(ua, "resumes", "a" * 32, ".pdf")
     assert a.get("/api/auth/me").status_code == 401
 
 
@@ -122,13 +123,13 @@ def test_storage_blocks_traversal(env):
     uid = "a" * 32
     for bad in ("../x", "a" * 31, "A" * 32):
         with pytest.raises(ValueError):
-            storage.path_for(uid, "resumes", bad)
+            storage._key(uid, "resumes", bad)
     with pytest.raises(ValueError):
-        storage.path_for(uid, "../etc", "a" * 32)
+        storage._key(uid, "../etc", "a" * 32)
     with pytest.raises(ValueError):
-        storage.path_for("../evil", "resumes", "a" * 32)
+        storage._key("../evil", "resumes", "a" * 32)
     with pytest.raises(ValueError):
-        storage.path_for(uid, "resumes", "a" * 32, "/../x")
+        storage._key(uid, "resumes", "a" * 32, "/../x")
 
 
 def test_audit_log_endpoint_is_per_user_and_metadata_only(env, mk):

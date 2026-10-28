@@ -176,7 +176,7 @@ def test_scenario_master_untouched_after_tailoring_several_jobs_and_unsupported_
     out = [tailor(a, j) for j in (jobs["Backend Engineer"], jobs["Software Engineering Intern"], manual)]
     assert master(a) == before
     infra = out[2]
-    blob = str(infra["content"]) + open(storage.bundle_path(a.get("/api/auth/me").json()["id"], infra["id"], "resume.txt"), encoding="utf-8").read()
+    blob = str(infra["content"]) + storage.get_bundle(a.get("/api/auth/me").json()["id"], infra["id"], "resume.txt").decode("utf-8")
     assert "Terraform" not in blob and "Go" not in [i["name"] for g in infra["content"]["skills"] for i in g["items"]]
     tips = {t["term"]: t["type"] for t in infra["score_detail"]["improvements"] if t["term"]}
     assert tips["Terraform"] == "no_support" and tips["Go"] == "no_support"
@@ -219,6 +219,8 @@ def test_deleting_the_account_removes_generated_files_and_rows(env, mk):
     _, jobs = setup(a)
     r = tailor(a, jobs["Backend Engineer"])
     uid = a.get("/api/auth/me").json()["id"]
-    assert storage.bundle_path(uid, r["id"], "resume.pdf").exists()
+    assert storage.get_bundle(uid, r["id"], "resume.pdf")
     assert a.post("/api/me/delete", {"password": "correct-horse-9"}).status_code == 200
-    assert not storage.user_dir(uid).exists() and new_session().query(TailoredResume).count() == 0
+    with pytest.raises(FileNotFoundError):
+        storage.get_bundle(uid, r["id"], "resume.pdf")
+    assert new_session().query(TailoredResume).count() == 0

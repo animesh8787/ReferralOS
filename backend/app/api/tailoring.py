@@ -164,7 +164,7 @@ def download(tailored_id: str, name: str, inline: bool = False, user: User = Dep
     if name not in r.files:
         raise HTTPException(404, "Not found")
     try:
-        data = storage.bundle_path(user.id, r.id, name).read_bytes()
+        data = storage.get_bundle(user.id, r.id, name)
     except (OSError, ValueError):
         raise HTTPException(404, "Not found")
     disp = "inline" if inline and name.endswith(".pdf") else "attachment"  # inline only for the PDF preview
@@ -178,7 +178,7 @@ def bundle(tailored_id: str, user: User = Depends(current_user), db: Session = D
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for n in r.files:
-            z.write(storage.bundle_path(user.id, r.id, n), n)
+            z.writestr(n, storage.get_bundle(user.id, r.id, n))
     audit(db, user.id, "resume_bundle_exported")
     return Response(buf.getvalue(), media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="resume-v{r.version}.zip"'})
 

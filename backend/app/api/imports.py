@@ -133,8 +133,7 @@ def purge_raw(import_id: str, user: User = Depends(current_user), db: Session = 
     i = db.query(ImportBatch).filter(ImportBatch.id == import_id).first()
     if not i:
         raise HTTPException(404, "Not found")
-    p = storage.path_for(user.id, "imports", i.id, ".csv")
-    p.unlink(missing_ok=True)
+    storage.delete(user.id, "imports", i.id, ".csv")
     db.query(ImportRow).filter(ImportRow.import_id == i.id).update({"raw": {}})
     i.status = "purged"
     audit(db, user.id, "import_purged", import_id=i.id)

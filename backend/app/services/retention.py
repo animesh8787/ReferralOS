@@ -31,7 +31,7 @@ def purge_old_imports(db: Session, user_id: str, days: int) -> int:
     for imp in db.query(ImportBatch).filter(ImportBatch.created_at < cutoff, ImportBatch.status != "purged").all():
         if imp.status == "running":
             continue
-        storage.path_for(user_id, "imports", imp.id, ".csv").unlink(missing_ok=True)
+        storage.delete(user_id, "imports", imp.id, ".csv")
         db.query(ImportRow).filter(ImportRow.import_id == imp.id).update({"raw": {}})
         imp.status = "purged"
         n += 1

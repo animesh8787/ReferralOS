@@ -92,7 +92,7 @@ def build_ctx(db: Session, m: OutreachMessage, cfg: dict, now: datetime | None =
         size = 0
         if r:
             try:
-                size = storage.bundle_path(m.user_id, r.id, "resume.pdf").stat().st_size
+                size = len(storage.get_bundle(m.user_id, r.id, "resume.pdf"))
             except OSError:
                 size = 0
         ctx.attachment = {"approved": bool(r and r.status == "approved"), "for_job": bool(r and r.job_id == m.job_id), "size": size}
@@ -178,7 +178,7 @@ def reject(db: Session, m: OutreachMessage, state: str = "rejected") -> None:
 def _attachment(db: Session, m: OutreachMessage):
     if not m.attach_resume_id:
         return None
-    return ("resume.pdf", storage.bundle_path(m.user_id, m.attach_resume_id, "resume.pdf").read_bytes())
+    return ("resume.pdf", storage.get_bundle(m.user_id, m.attach_resume_id, "resume.pdf"))
 
 
 def claim(db: Session, m: OutreachMessage) -> bool:

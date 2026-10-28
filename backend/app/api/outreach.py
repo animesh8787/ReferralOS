@@ -408,7 +408,7 @@ def eml(message_id: str, db: Session = Depends(scoped_db)):
     att = None
     if m.attach_resume_id:
         from .. import storage
-        att = ("resume.pdf", storage.bundle_path(m.user_id, m.attach_resume_id, "resume.pdf").read_bytes())
+        att = ("resume.pdf", storage.get_bundle(m.user_id, m.attach_resume_id, "resume.pdf"))
     data, _ = providers.build_mime(cfg["sender_name"], cfg["sender_email"], m.to_email or "", m.subject or "", m.body, att)
     return Response(data, media_type="message/rfc822", headers={"Content-Disposition": 'attachment; filename="draft.eml"'})
 
