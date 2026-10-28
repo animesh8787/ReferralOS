@@ -12,7 +12,7 @@ The user wants ReferralOS built from scratch in `C:\Users\anime\Desktop\Referral
   - git, with identity `Animesh` already configured.
 - Docker Desktop is installed, but its engine is **not running**. There is no local Postgres, Redis, Tesseract, LibreOffice or pandoc.
 - User decisions:
-  - **git init plus one local commit per phase**, using the existing git identity. **No Claude author, co-author or attribution trailer. Never push.**
+  - **git init plus one local commit per phase**, using the existing git identity. Never push.
   - **I start Docker Desktop myself** when I reach the Postgres/compose verification step.
 
 ## Key technical decisions (each goes into `docs/DECISIONS.md`)
@@ -82,8 +82,7 @@ docker-compose.yml (postgres, api, worker, web)  .env.example  .gitignore  READM
 - `cd frontend && npx playwright test`: the full flow from sign-up to account deletion, with mock adapters.
 - `python scripts/perf.py` writes measured throughput and latency to `docs/TEST_REPORT.md`.
 - `docker compose up` starts postgres, api, worker and web, and the health endpoint responds.
-- Manual: start both servers through `.claude/launch.json` / preview and click through onboarding to batch review in the browser pane.
+- Manual: start both servers and click through onboarding to batch review in the browser.
 
 ## After approval
-- Save a memory for the user's git rule (no Claude author or co-author, no push).
 - Check `PROGRESS.md` at the start of every phase. That file is where work resumes after context compaction.
