@@ -14,7 +14,14 @@ from ..security import (check_password_policy, create_session, current_user, get
                         set_auth_cookies, sha, verify_password)
 from ..util import utcnow
 
+def _password_only():
+    """Local password auth is off once Firebase is configured, so there is exactly one way in."""
+    if get_settings().firebase_project_id:
+        raise HTTPException(404, "Not found")
+
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+PW = [Depends(_password_only)]
 
 
 class Signup(BaseModel):
@@ -69,7 +76,7 @@ def _public(u: User) -> dict:
             "email_verified": u.email_verified}
 
 
-@router.post("/signup", status_code=201)
+@router.post("/signup", status_code=201, dependencies=PW)
 def signup(body: Signup, request: Request, db: Session = Depends(get_db)):
     ratelimit.check(f"signup:{_ip(request)}", 10, 3600)
     email = _norm_email(body.email)
@@ -84,7 +91,7 @@ def signup(body: Signup, request: Request, db: Session = Depends(get_db)):
     return _public(u)
 
 
-@router.post("/verify")
+@router.post("/verify", dependencies=PW)
 def verify(body: TokenIn, db: Session = Depends(get_db)):
     t = db.query(EmailToken).filter(EmailToken.token_hash == sha(body.token), EmailToken.kind == "verify").first()
     if not t or t.used or t.expires_at < utcnow():
@@ -95,18 +102,66 @@ def verify(body: TokenIn, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
-@router.post("/login")
+@router.post("/login", dependencies=PW)
 def login(body: Login, request: Request, response: Response, db: Session = Depends(get_db)):
     email = body.email.strip().lower()
     ratelimit.check(f"login-ip:{_ip(request)}", 20, 300)
     ratelimit.check(f"login-acct:{email}", 5, 300)
     u = db.query(User).filter(User.email == email).first()
-    if not u or not verify_password(u.password_hash, body.password):
+    if not u or not u.password_hash or not verify_password(u.password_hash, body.password):
         audit(db, u.id if u else None, "login_failed")
         db.commit()  # keep the audit row even though we raise
         raise HTTPException(401, "Invalid email or password")
     raw, csrf = create_session(db, u)
     audit(db, u.id, "login")
+    set_auth_cookies(response, raw, csrf)
+    return _public(u)
+
+
+class FirebaseIn(BaseModel):
+    id_token: str
+
+
+def _verify_firebase(token: str) -> dict:
+    """Google's own verifier checks signature, expiry and audience; the issuer is checked here. Tests patch this function."""
+    from google.auth.transport import requests as greq
+    from google.oauth2 import id_token
+    pid = get_settings().firebase_project_id
+    claims = id_token.verify_firebase_token(token, greq.Request(), audience=pid)
+    if not claims or claims.get("iss") != f"https://securetoken.google.com/{pid}":
+        raise ValueError("wrong issuer")
+    return claims
+
+
+@router.post("/firebase")
+def firebase_login(body: FirebaseIn, request: Request, response: Response, db: Session = Depends(get_db)):
+    """Exchange a Firebase ID token (Google or email/password sign-in) for this app's own session cookie."""
+    if not get_settings().firebase_project_id:
+        raise HTTPException(404, "Not found")
+    ratelimit.check(f"firebase:{_ip(request)}", 30, 300)
+    try:
+        claims = _verify_firebase(body.id_token)
+    except Exception:  # noqa: BLE001  any verification failure is a plain 401; details would help an attacker
+        raise HTTPException(401, "Sign-in could not be verified")
+    uid, email, verified = claims.get("user_id") or claims.get("sub"), (claims.get("email") or "").strip().lower(), bool(claims.get("email_verified"))
+    if not uid or not email:
+        raise HTTPException(401, "Sign-in could not be verified")
+    u = db.query(User).filter(User.firebase_uid == uid).first()
+    if u is None:
+        u = db.query(User).filter(User.email == email).first()
+        if u is not None and not verified:  # linking by email needs a verified address, or anyone could claim someone else's account
+            raise HTTPException(403, "Verify your email address with Firebase first, then sign in again")
+        if u is None:
+            u = User(email=email, firebase_uid=uid, email_verified=verified, display_name=(claims.get("name") or "")[:200])
+            db.add(u)
+            db.flush()
+            audit(db, u.id, "signup", via="firebase")
+        else:
+            u.firebase_uid = uid
+    if verified:
+        u.email_verified = True
+    raw, csrf = create_session(db, u)
+    audit(db, u.id, "login", via="firebase")
     set_auth_cookies(response, raw, csrf)
     return _public(u)
 
@@ -125,7 +180,7 @@ def me(user: User = Depends(current_user)):
     return _public(user)
 
 
-@router.post("/resend-verification", status_code=202)
+@router.post("/resend-verification", status_code=202, dependencies=PW)
 def resend_verification(user: User = Depends(current_user), db: Session = Depends(get_db)):
     ratelimit.check(f"resend:{user.id}", 3, 3600)
     if user.email_verified:
@@ -135,7 +190,7 @@ def resend_verification(user: User = Depends(current_user), db: Session = Depend
     return {"ok": True}
 
 
-@router.post("/forgot", status_code=202)
+@router.post("/forgot", status_code=202, dependencies=PW)
 def forgot(body: Forgot, request: Request, db: Session = Depends(get_db)):
     ratelimit.check(f"forgot:{_ip(request)}", 5, 3600)
     u = db.query(User).filter(User.email == body.email.strip().lower()).first()
@@ -147,7 +202,7 @@ def forgot(body: Forgot, request: Request, db: Session = Depends(get_db)):
     return {"ok": True}
 
 
-@router.post("/reset")
+@router.post("/reset", dependencies=PW)
 def reset(body: Reset, db: Session = Depends(get_db)):
     check_password_policy(body.password)
     t = db.query(EmailToken).filter(EmailToken.token_hash == sha(body.token), EmailToken.kind == "reset").first()

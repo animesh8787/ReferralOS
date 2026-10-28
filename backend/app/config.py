@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     cors_origins: list[str] = ["http://localhost:3000"]
     require_email_verification: bool = True
+    firebase_project_id: str = ""  # set = Firebase Auth is the only way in (password routes are off); unset = local password auth
     resend_api_key: str = ""  # empty = system mail goes to data/outbox only
     mail_from: str = "ReferralOS <onboarding@resend.dev>"  # resend.dev only delivers to the Resend account owner until a domain is verified
     app_url: str = "http://localhost:3000"  # base of the links in system mail

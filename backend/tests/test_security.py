@@ -10,7 +10,7 @@ from tests.outreach_helpers import _reset_world  # noqa: F401
 from tests.conftest import Api
 from tests.test_isolation import _uid  # noqa: F401
 
-PUBLIC = {("GET", "/api/health"), ("POST", "/api/auth/signup"), ("POST", "/api/auth/login"), ("POST", "/api/auth/verify"), ("POST", "/api/auth/forgot"), ("POST", "/api/auth/reset"),
+PUBLIC = {("GET", "/api/health"), ("POST", "/api/auth/signup"), ("POST", "/api/auth/login"), ("POST", "/api/auth/verify"), ("POST", "/api/auth/forgot"), ("POST", "/api/auth/reset"), ("POST", "/api/auth/firebase"),
           ("GET", "/api/outreach/guidance")}  # guidance text is static legal-style information; the others are the sign-in flow itself
 FILLERS = {"task_id": "0" * 32, "resume_id": "0" * 32, "item_id": "0" * 32, "version_id": "0" * 32, "import_id": "0" * 32, "contact_id": "0" * 32, "review_id": "0" * 32,
            "entry_id": "0" * 32, "company_id": "0" * 32, "job_id": "0" * 32, "board_id": "0" * 32, "tailored_id": "0" * 32, "other_id": "0" * 32, "message_id": "0" * 32,

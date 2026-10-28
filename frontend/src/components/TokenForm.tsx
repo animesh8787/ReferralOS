@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { api } from "@/lib/api";
+import { fbAuth, fbMessage, firebaseEnabled } from "@/lib/firebase";
 
 type Mode = "verify" | "forgot" | "reset";
 const COPY: Record<Mode, { title: string; button: string; done: string }> = {
@@ -18,15 +20,19 @@ function Inner({ mode }: { mode: Mode }) {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const c = COPY[mode];
+  if (firebaseEnabled && mode !== "forgot") {  // Firebase sends links that open on its own page
+    return <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4"><h1>{c.title}</h1><p>Use the link in the email Firebase sent you. If it has expired, sign in and press “Resend verification email”.</p><p><Link href="/login">Back to sign in</Link></p></main>;
+  }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(""); setMsg("");
     try {
-      if (mode === "verify") await api("/auth/verify", { body: { token } });
+      if (firebaseEnabled) await sendPasswordResetEmail(fbAuth(), value);
+      else if (mode === "verify") await api("/auth/verify", { body: { token } });
       else if (mode === "forgot") await api("/auth/forgot", { body: { email: value } });
       else await api("/auth/reset", { body: { token, password: value } });
       setMsg(c.done);
-    } catch (x) { setErr((x as Error).message); }
+    } catch (x) { setErr(firebaseEnabled ? fbMessage(x) : (x as Error).message); }
   }
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-5 px-4 view-enter">

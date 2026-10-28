@@ -8,7 +8,18 @@ import PreferencesForm from "@/components/PreferencesForm";
 import WeightsEditor from "@/components/WeightsEditor";
 import Notice from "@/components/ui/Notice";
 import PageHeader from "@/components/ui/PageHeader";
+import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup } from "firebase/auth";
 import { api } from "@/lib/api";
+import { fbAuth, firebaseEnabled } from "@/lib/firebase";
+
+// Deleting everything needs a fresh sign-in: re-authenticate, then send a brand-new ID token.
+async function freshToken(password: string): Promise<string> {
+  const u = fbAuth().currentUser;
+  if (!u) throw new Error("Please sign in again first.");
+  if (u.providerData[0]?.providerId === "google.com") await reauthenticateWithPopup(u, new GoogleAuthProvider());
+  else await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email ?? "", password));
+  return u.getIdToken(true);
+}
 
 type Cfg = { weights: Record<string, number>; missing_policy: string };
 type MCfg = { match_weights: Record<string, number>; contact_weights: Record<string, number>; opportunity_weights: Record<string, number>; contacts_per_job: number };
@@ -30,6 +41,7 @@ export default function Settings() {
   const [days, setDays] = useState("");
   const [pw, setPw] = useState("");
   const [msg, setMsg] = useState("");
+  const googleUser = firebaseEnabled && fbAuth().currentUser?.providerData[0]?.providerId === "google.com";
   const say = async (fn: () => Promise<unknown>, ok: string) => { setMsg(""); try { const r = await fn(); setMsg(typeof r === "string" ? r : ok); } catch (e) { setMsg((e as Error).message); } };
   const toggle = (data: Record<string, boolean> | undefined, path: string, mut: () => void) => Object.entries(data ?? {}).map(([k, v]) => (
     <label key={k} className="flex flex-wrap items-center gap-2"><input type="checkbox" checked={v} onChange={async (e) => { await api(path, { method: "PUT", body: { [k]: e.target.checked } }); mut(); }} />{k.replaceAll("_", " ")}</label>));
@@ -77,9 +89,10 @@ export default function Settings() {
         {Object.keys(consents.data ?? {}).map((k) => <ConsentCheckbox key={k} name={k} onChange={() => priv.mutate()} />)}
         <p><a className="underline" href="/api/me/export">Download all my data (JSON)</a></p>
         <form className="grid gap-2 rounded border border-danger p-3" onSubmit={(e) => { e.preventDefault(); if (!window.confirm("Permanently delete your account and ALL your data, files and tokens? This cannot be undone.")) return;
-          say(async () => { await api("/me/delete", { body: { password: pw } }); router.replace("/signup"); }, ""); }}>
+          say(async () => { await api("/me/delete", { body: firebaseEnabled ? { id_token: await freshToken(pw) } : { password: pw } }); router.replace("/signup"); }, ""); }}>
           <h3 className="font-medium text-danger">Delete my account and all data</h3><p className="text-xs">This removes your profile, imports, contacts, jobs analysis, resumes, drafts, messages, tokens and files.</p>
-          <input type="password" required autoComplete="current-password" aria-label="Your password" placeholder="Confirm with your password" className="w-64 rounded border px-2 py-1" value={pw} onChange={(e) => setPw(e.target.value)} />
+          {!googleUser && <input type="password" required autoComplete="current-password" aria-label="Your password" placeholder="Confirm with your password" className="w-64 rounded border px-2 py-1" value={pw} onChange={(e) => setPw(e.target.value)} />}
+          {firebaseEnabled && <p className="text-xs">Only your ReferralOS data is deleted. Your sign-in account stays, because it is shared with other apps.</p>}
           <button className="w-fit rounded bg-danger px-3 py-1.5 text-white">Delete everything</button></form></section>
     </div>
   );

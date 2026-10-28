@@ -8,7 +8,9 @@ import CommandPalette, { NavItem } from "@/components/ui/CommandPalette";
 import Notice from "@/components/ui/Notice";
 import Skeleton from "@/components/ui/Skeleton";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { sendEmailVerification } from "firebase/auth";
 import { api, Me } from "@/lib/api";
+import { fbAuth, firebaseEnabled } from "@/lib/firebase";
 
 type L = [string, string, typeof Menu];
 const MAIN: [string, L[]][] = [
@@ -76,7 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="mt-auto grid gap-2 border-t pt-3">
             <span className="truncate px-2 text-xs text-muted" title={me?.email}>{me?.email ?? "…"}</span>
             <div className="flex items-center justify-between gap-2 px-1">
-              <button type="button" className="btn" onClick={async () => { await api("/auth/logout", { method: "POST", body: {} }); router.replace("/login"); }}>Sign out</button>
+              <button type="button" className="btn" onClick={async () => { await api("/auth/logout", { method: "POST", body: {} }); if (firebaseEnabled) await fbAuth().signOut(); router.replace("/login"); }}>Sign out</button>
               <ThemeToggle />
             </div>
           </div>
@@ -90,7 +92,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span className="flex items-center gap-2"><Search size={14} strokeWidth={1.6} aria-hidden="true" />Search or jump to…</span><kbd className="field-label hidden sm:inline">Ctrl K</kbd>
             </button>
           </div>
-          {me && !me.email_verified && <div className="px-4 pt-4 md:px-6"><Notice kind="warn">Your email is not verified yet. Some features stay locked until it is. {resent || <button type="button" className="underline" onClick={async () => { try { await api("/auth/resend-verification", { body: {} }); setResent("Verification email sent, check your inbox."); } catch (e) { setResent((e as Error).message); } }}>Resend verification email</button>}</Notice></div>}
+          {me && !me.email_verified && <div className="px-4 pt-4 md:px-6"><Notice kind="warn">Your email is not verified yet. Some features stay locked until it is. {resent || <button type="button" className="underline" onClick={async () => { try { if (firebaseEnabled) { const u = fbAuth().currentUser; if (!u) throw new Error("Please sign out and sign in again, then resend."); await sendEmailVerification(u); } else await api("/auth/resend-verification", { body: {} }); setResent("Verification email sent, check your inbox."); } catch (e) { setResent((e as Error).message); } }}>Resend verification email</button>}</Notice></div>}
           <main id="main" className="px-4 py-5 md:px-6">
             <div className="page">{me ? children : <Skeleton rows={6} />}</div>
           </main>

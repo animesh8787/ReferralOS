@@ -1,9 +1,13 @@
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .. import ratelimit
 from ..audit import audit
+from ..config import get_settings
+from . import auth as auth_api
 from ..models.core import BackgroundTask, User
 from ..security import current_user, get_db, scoped_db, verify_password
 from ..services.privacy import delete_user_data, export_user
@@ -12,7 +16,8 @@ router = APIRouter(prefix="/api", tags=["me"])
 
 
 class DeleteIn(BaseModel):
-    password: str
+    password: str | None = None
+    id_token: str | None = None  # Firebase accounts re-authenticate with a fresh token instead of a password
 
 
 @router.get("/me/export")
@@ -24,7 +29,14 @@ def export(user: User = Depends(current_user), db: Session = Depends(get_db)):
 
 @router.post("/me/delete")
 def delete_me(body: DeleteIn, response: Response, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    if not verify_password(user.password_hash, body.password):
+    if get_settings().firebase_project_id:
+        try:
+            claims = auth_api._verify_firebase(body.id_token or "")
+        except Exception:  # noqa: BLE001
+            raise HTTPException(403, "Please sign in again to confirm")
+        if (claims.get("user_id") or claims.get("sub")) != user.firebase_uid or time.time() - int(claims.get("auth_time", 0)) > 300:
+            raise HTTPException(403, "Please sign in again to confirm")
+    elif not user.password_hash or not verify_password(user.password_hash, body.password or ""):
         raise HTTPException(403, "Password incorrect")
     delete_user_data(db, user.id)
     response.delete_cookie("sid")

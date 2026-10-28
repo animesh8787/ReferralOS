@@ -10,7 +10,8 @@ from ..util import utcnow
 class User(IdMixin, Base):
     __tablename__ = "users"
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255))
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)  # null for accounts that only sign in through Firebase
+    firebase_uid: Mapped[str | None] = mapped_column(String(128), unique=True, index=True, nullable=True)
     role: Mapped[str] = mapped_column(String(16), default="user")  # user | admin
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     display_name: Mapped[str] = mapped_column(String(200), default="")
