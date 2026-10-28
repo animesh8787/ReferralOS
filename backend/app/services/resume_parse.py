@@ -398,9 +398,20 @@ def assign_evidence(items: list[Item]) -> None:
             studied |= taxonomy.skill_set(" ".join(it.data.get("coursework", [])))
     ptext = " ".join(_norm(" ".join(map(str, it.data.get("bullets", []))) + " " + str(it.data.get("title") or "")) for it in items if it.section == "experience")
     jtext = " ".join(_norm(" ".join(map(str, it.data.get("description", []))) + " " + str(it.data.get("name") or "")) for it in items if it.section == "project")
+    def implied(n, used):  # a used framework implies its language ("FastAPI" -> Python)
+        return next((f for f in sorted(used) if n in taxonomy.IMPLIES.get(f, ())), None)
+
     for it in items:
         if it.section == "skill":
             n = it.data["name"]
+            if not (n in prof or n in proj) and (f := implied(n, prof)):
+                it.data["evidence_note"] = f"implied by {f} in your work experience"
+                it.evidence_level = "USED_PROFESSIONALLY"
+                continue
+            if not (n in prof or n in proj) and (f := implied(n, proj)):
+                it.data["evidence_note"] = f"implied by {f} in your projects"
+                it.evidence_level = "USED_IN_PROJECT"
+                continue
             word = re.compile(rf"(?<![\w]){re.escape(_norm(n))}(?![\w])")
             it.evidence_level = ("USED_PROFESSIONALLY" if n in prof or word.search(ptext) else "USED_IN_PROJECT" if n in proj or word.search(jtext)
                                  else "STUDIED" if n in studied else "CLAIMED_ONLY")

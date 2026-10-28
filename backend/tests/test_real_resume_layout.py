@@ -94,11 +94,20 @@ def test_skill_evidence_uses_the_projects_own_words():
     assert skills["SQS"] == "USED_IN_PROJECT" and skills["Python"] == "CLAIMED_ONLY"
 
 
-def test_skill_questions_collapse_into_one(env, mk):
+def test_every_listed_only_skill_gets_its_own_question(env, mk):
     a = mk("a@example.com")
     a.upload(pdf_with_links())
     qs = [q for q in a.get("/api/profile").json()["questions"] if q["type"] == "unsupported_skill"]
-    assert len(qs) == 1 and "Python" in qs[0]["text"]
+    assert any("Python" in q["text"] for q in qs) and len(qs) > 1
+
+
+def test_a_framework_implies_its_language():
+    # a project that uses FastAPI necessarily uses Python even if the word never appears in it
+    text = "JORDAN SAMPLE\nTECHNICAL SKILLS\nLanguages\nPython, C++, JavaScript, React\nPROJECTS\nTalent Ranker - Ranking Tool    FastAPI, React\n- Built a ranking engine with live re-ranking.\n"
+    skills = {s.data["name"]: s for s in by(rp.structure(text)[0], "skill")}
+    assert skills["Python"].evidence_level == "USED_IN_PROJECT" and "FastAPI" in skills["Python"].data["evidence_note"]
+    assert skills["JavaScript"].evidence_level == "USED_IN_PROJECT"
+    assert skills["C++"].evidence_level == "CLAIMED_ONLY" and "evidence_note" not in skills["C++"].data
 
 
 def test_resume_without_links_still_parses():

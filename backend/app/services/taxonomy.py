@@ -36,6 +36,13 @@ SKILLS: dict[str, tuple[str, list[str]]] = {
     "HTML": ("language", ["html5"]), "CSS": ("language", ["css3"]), "Tailwind CSS": ("framework", ["tailwind"]),
     "JUnit": ("tool", []), "Pytest": ("tool", []), "Prometheus": ("tool", []), "Grafana": ("tool", []),
 }
+# a framework you used implies its language; used by resume parsing to link a listed language to the projects that necessarily use it.
+# Ambiguous cases (OpenCV: C++ or Python) are left out on purpose.
+IMPLIES: dict[str, tuple[str, ...]] = {
+    **{f: ("Python",) for f in ("Django", "Flask", "FastAPI", "PyTorch", "TensorFlow", "scikit-learn", "Pandas", "NumPy", "Airflow", "Pytest")},
+    **{f: ("JavaScript",) for f in ("React", "Next.js", "Node.js", "Express", "Angular", "Vue")},
+    "TypeScript": ("JavaScript",), "Spring Boot": ("Java",), "JUnit": ("Java",),
+}
 CASE_SENSITIVE = {"Go", "C", "R"}  # too ambiguous to match case-insensitively
 
 _ALIAS: dict[str, str] = {}
